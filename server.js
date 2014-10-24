@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-// modules =================================================
+// modules =============================================================
 var express = require('express');
 var request = require('request');
 var app     = express();
 
-// configuration ===========================================
+// configuration =======================================================
   
 var port = process.env.PORT || 8080; // set our port
 
@@ -18,12 +18,12 @@ app.configure(function() {
   //app.use(express.logger('dev')); 					      // log only non-public content
 });
 
-// routes to PCP Web API ===========================================
+// routes to PCP Web API ===============================================
 
 var pcpHost = 'localhost',
     pcpPort = 44323;
     
-// static files  ==================================================
+// static files  =======================================================
 
 app.get('/test', function(req,res) {
   res.sendfile('test.json');
@@ -59,7 +59,14 @@ app.get('/fonts/glyphicons-halflings-regular.woff', function(req,res) {
   res.sendfile('bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff');
 });
 
-// start app ===============================================
+app.get('/d3.js', function(req, res) {
+  res.sendfile('bower_components/d3/d3.js')
+});
+
+// pcp webapi ==========================================================
+
+
+// start app ===========================================================
 
 app.listen(port, function() { // startup our app at http://localhost:port
   console.log("listening...");
