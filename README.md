@@ -13,3 +13,31 @@ Makes use of the following technologies:
 * [d3](http://d3js.org)
 * [jquery](http://jquery.com)
 
+## Getting Started
+ 
+On RHEL systems, the following commands will get you started:
+
+```bash
+yum install pcp pcp-webapi
+service pmcd start
+service pmwebd start
+```
+
+Test the PCP installation by running the following
+```bash
+pcp
+pmprobe
+pminfo
+```
+
+**pcpdash requires a working web API!**
+
+## Launch pcpdash
+
+```bash
+git clone http://github.com/dspinoz/pcpdash.git
+cd pcpdash
+npm install
+bower install
+node server.js
+```
