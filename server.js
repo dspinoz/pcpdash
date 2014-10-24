@@ -9,6 +9,9 @@ var app     = express();
   
 var port = process.env.PORT || 8080; // set our port
 
+var pcpHost = process.env.PCPHOST || 'localhost', 
+    pcpPort = process.env.PCPPORT || 44323; // pcp web service
+    
 app.configure(function() {
   
   // the order of app middleware is important - invoked sequentially!
@@ -18,10 +21,6 @@ app.configure(function() {
   //app.use(express.logger('dev')); 					      // log only non-public content
 });
 
-// routes to PCP Web API ===============================================
-
-var pcpHost = 'localhost',
-    pcpPort = 44323;
     
 // static files  =======================================================
 
@@ -69,6 +68,11 @@ app.get('/queue.js', function(req, res) {
 
 // pcp webapi ==========================================================
 
+// TODO authentication 
+
+app.get('/pmapi/*', function(req,res) {
+  req.pipe(request('http://' +pcpHost +':'+ pcpPort + req.originalUrl)).pipe(res);
+});
 
 // start app ===========================================================
 

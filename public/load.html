@@ -41,8 +41,8 @@
 
           <div class='container' id='content'></div>
           
-          <button type="button" class="btn btn-default btn-lg" onclick="alert('Go!')">
-            <span class="glyphicon glyphicon-thumbs-up"></span> Go
+          <button type="button" class="btn btn-default btn-lg" onclick="updateData()">
+            <span class="glyphicon glyphicon-refresh"></span> Update
           </button>
 
         </div>
@@ -51,7 +51,86 @@
     
     <script type="text/javascript">
     
-      d3.select('#content').html('<span class="glyphicon glyphicon-ok" style="color:green">d3</span>');
+    
+      
+      function getContext(info, callback)
+      {
+        d3.json("/pmapi/context?local=ANYTHING", function(json) {
+          
+          info.context = json.context;
+          
+          info.queue.defer(getMetric, info);
+          
+          callback(null,null);
+        });
+      }
+      
+      function getMetric(info, callback) {
+        //TODO support multiple metrics
+        d3.json("/pmapi/"+info.context+"/_metric?prefix="+info.metric, function(json) {
+          
+          info.metric = json.metrics[0];
+          
+          info.queue.defer(getDomain, info);
+          
+          callback(null,null);
+        });
+      }
+      
+      function getDomain(info, callback) {
+      
+        d3.json("/pmapi/"+info.context+"/_fetch?names="+info.metric.name, function(json) {
+          
+          info.timestamp = json.timestamp;
+          info.values = json.values[0].instances;
+          
+          info.queue.defer(getDomainDescription, info);
+          
+          callback(null,null);
+        });
+      }
+      
+      function getDomainDescription(info, callback) {
+          
+        d3.json("/pmapi/"+info.context+"/_indom?indom="+info.metric.indom, function(json) {
+          
+          info.names = json.instances;
+          
+          callback(null,null);
+        });
+      }
+      
+      function updateData() {
+        var q = queue();
+        var ctx = {queue: q, context: 0, metric: "kernel.all.load"};
+        
+        q.defer(getContext, ctx);
+        
+        q.await(function () {
+          
+          // map all the names and values 
+          var map = d3.map();
+          
+          ctx.names.forEach(function(n) {
+            map.set(n.instance, n.name);
+          });
+          
+          ctx.values.forEach(function(v) {
+            var n = map.get(v.instance);
+            map.remove(v.instance);
+            map.set(v.instance, {name: n, value: v.value});
+          });
+          
+          ctx.instances = map.entries();
+          
+          var pcpMetric = {metric: ctx.metric, values: ctx.instances};
+          
+          d3.select('#content').html('<pre>'+JSON.stringify(pcpMetric, false, ' ')+'</pre>');
+        });
+      }
+      
+      updateData();
+      
     
     </script>
     
