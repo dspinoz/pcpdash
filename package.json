@@ -1,0 +1,13 @@
+{
+  "name": "pcpdash",
+  "main": "server.js",
+  "version": "0.0.1",
+  "description": "Dashboard for PCP",
+  "author": "Daniel Spinozzi",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/dspinoz/pcpdash.git"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

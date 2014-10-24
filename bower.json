@@ -1,0 +1,25 @@
+{
+  "name": "pcpdash",
+  "version": "0.0.1",
+  "homepage": "https://github.com/dspinoz/projects/pcpdash",
+  "authors": [
+    "Daniel Spinozzi"
+  ],
+  "description": "Dashboard for PCP",
+  "main": "server.js",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "keywords": [
+    "Dashboard",
+    "PCP"
+  ],
+  "dependencies": {
+  }
+}
