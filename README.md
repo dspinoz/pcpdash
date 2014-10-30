@@ -18,7 +18,7 @@ Makes use of the following technologies:
 On RHEL systems, the following commands will get you started:
 
 ```bash
-yum install pcp pcp-webapi
+yum install pcp pcp-webapi pcp-manager
 service pmcd start
 service pmwebd start
 ```

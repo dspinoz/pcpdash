@@ -1,0 +1,20 @@
+#!/bin/sh -x 
+
+PCP_RUN_DIR=`pwd`/../../logs/pmmgr
+PCP_USER=$USER
+PCP_GROUP=`groups | awk '{print $1}'`
+PMLOGGER_PORT=9999
+
+export PCP_RUN_DIR
+export PCP_USER
+export PCP_GROUP
+export PMLOGGER_PORT
+
+if [[ -z "$PCP_USER" || -z "$PCP_GROUP" ]]
+then
+  echo "ERROR: Could not determine user/group"
+  exit 1
+fi
+
+#-l run.log
+exec /usr/libexec/pcp/bin/pmmgr -c `pwd` -p 5 -vvvv
