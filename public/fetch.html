@@ -52,12 +52,148 @@
     
     <script type="text/javascript">
       
+      function getMetricInstanceInfo(archive, callback) {
+        d3.json("/pmapi/"+archive.context+"/_indom?indom=" + archive.metric.info.indom, function(json) {
+          if (json && json.instances) {
+            archive.metric.instances = json.instances;
+          }
+          callback(null,archive);
+        });
+      }
+      
+      function getMetricInfo(archive, callback) {
+        d3.json("/pmapi/"+archive.context+"/_metric?names=" + archive.metric.name, function(json) {
+          
+          // supports only a single metric
+          archive.metric.info = json.metrics[0];
+          
+          var q = queue();
+          q.defer(getMetricInstanceInfo, archive);
+          q.await(function(err, instInfo) {
+            callback(null,instInfo);
+          });
+        });
+      }
+      
+      function getMetricValue(archive, callback) {
+        d3.json("/pmapi/"+archive.context+"/_fetch?names=" + archive.metric.name, function(json) {
+          
+          if (json) {
+            archive.metric.timestamp = json.timestamp;
+            archive.metric.values = json.values;
+          }
+          
+          callback(null,archive);
+        });
+      }
+      
+      function getMetrics(info, callback) {
+        
+        var q = queue();
+        
+        info.archives.forEach(function (a) {
+          
+          // TODO support multiple metrics
+          a.metric = {name: info.metric};
+          
+          q.defer(getMetricInfo, a);
+          q.defer(getMetricValue, a);
+          
+        });
+        
+        q.await(function(err, metrics) {
+          
+          callback(null,metrics);
+        });
+      }
+      
+      function getContext(archive, callback) {
+        d3.json("/pmapi/context?archivefile=" + archive.file, function(json) {
+          
+          archive.context = json.context;
+          
+          callback(null,archive);
+        });
+      }
+      
+      function getContexts(archives, callback) {
+        
+        var q = queue();
+        
+        archives.forEach(function (a) {
+          
+          q.defer(getContext, a);
+          
+        });
+        
+        q.awaitAll(function(err, all) {
+          
+          callback(null,all);
+        });
+      }
+      
+      function getArchives(info, callback) {
+        
+        d3.json("/pcpdash/archives", function(json) {
+          
+          var regex = new RegExp('^(' + info.host + ')/(.*)', 'g');
+          
+          var archives = [];
+          
+          json.archives.forEach(function(a) {
+            
+            var match = regex.exec(a);
+            
+            if (match) {
+              archives.push({host: match[1], file: match[0]});
+            }
+          });
+          
+          callback(null,archives);
+        });
+      }
+      
       function updateData() {
-        d3.select('#content').html('<pre>'+JSON.stringify({}, false, ' ')+'</pre>');
+        
+        var q = queue();
+        
+        var ctx = {
+          host: "localhost.localdomain", //TODO get from input field
+          metric: "kernel.all.load" //TODO get from input field
+        };
+        
+        q.defer(getArchives, ctx);
+        
+        q.await(function (err, archives) {
+          
+          if (err) {
+            d3.select('#content').html(err);
+            return;
+          }
+            
+          d3.select('#content').html('<pre>GOT ARCHIVES: '+JSON.stringify(archives, false, ' ')+'</pre>');
+          
+          q = queue();
+          
+          q.defer(getContexts, archives);
+          
+          q.await(function(err, contexts) {
+            d3.select('#content').html('<pre>GOT CONTEXTS: '+JSON.stringify(contexts, false, ' ')+'</pre>');
+            
+            q = queue();
+            
+            q.defer(getMetrics, {metric: ctx.metric, archives: archives});
+            
+            q.await(function(err, metric) {
+              d3.select('#content').html('<pre>GOT METRIC: '+JSON.stringify(metric, false, ' ')+'</pre>');
+            });
+            
+          });
+          
+        });
       }
       
       updateData();
-      
     
     </script>
     
