@@ -66,9 +66,18 @@ app.get('/queue.js', function(req, res) {
   res.sendfile('bower_components/queue-async/queue.js')
 });
 
+// pcp =================================================================
+
+// TODO launch services
+//      config/pmmgr/run
+//      config/pmwebd/run
+
 // pcp webapi ==========================================================
 
 // TODO authentication 
+// TODO provide "easy" API for browser code to get metrics from archive
+// TODO remove security violation in config/pmwebd/run
+//      manage the available archives/hosts/metrics
 
 app.get('/pmapi/*', function(req,res) {
   req.pipe(request('http://' +pcpHost +':'+ pcpPort + req.originalUrl)).pipe(res);
