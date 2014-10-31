@@ -1,0 +1,15 @@
+#!/bin/sh -x 
+
+ARCHIVE_DIR=`pwd`/../../logs/pmmgr
+LISTEN_PORT=44324
+LOGFILE=../../logs/pmwebd.log
+
+PCP_USER=$USER
+PCP_GROUP=`groups | awk '{print $1}'` 
+
+export PCP_USER
+export PCP_GROUP
+
+exec /usr/libexec/pcp/bin/pmwebd -f --ipv4 --port=$LISTEN_PORT -A $ARCHIVE_DIR -l $LOGFILE
+
+
