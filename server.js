@@ -3,14 +3,19 @@
 // modules =============================================================
 var express = require('express');
 var request = require('request');
+var fs      = require('fs');
 var app     = express();
+var fswalk  = require('./utils/fswalk');
 
 // configuration =======================================================
   
 var port = process.env.PORT || 8080; // set our port
 
 var pcpHost = process.env.PCPHOST || 'localhost', 
-    pcpPort = process.env.PCPPORT || 44323; // pcp web service
+    pcpPort = process.env.PCPPORT || 44324; // custom pcp web service
+    
+var archiveDir = process.env.ARCHIVE_DIR || 'logs/pmmgr',
+    configDir  = process.env.PMMGR_CONFIG_DIR || 'config/pmmgr';
     
 app.configure(function() {
   
@@ -71,6 +76,39 @@ app.get('/queue.js', function(req, res) {
 // TODO launch services
 //      config/pmmgr/run
 //      config/pmwebd/run
+
+app.get('/pcpdash/hosts', function(req,res) {
+  // TODO catch errors when reading file
+  var data = fs.readFileSync(configDir+ '/target-host', {encoding: 'ascii'});
+  var arr = data.split(/\n/g);
+  arr = arr.filter(function(i) {
+    return i != '';
+  });
+  
+  res.send(JSON.stringify({hosts: arr}));
+});
+
+// Provide a list of archives in order to create PMWEBAPI contexts
+app.get('/pcpdash/archives', function(req,res) {
+  fswalk.walkSync(archiveDir, function(err, files) {
+    if (err) {
+      res.send(err);
+      return;
+    }
+    
+    var archives = [];
+    var regex = /.*\/(.*\/archive-[0-9]{8}.[0-9]{6}).meta/g;
+    
+    files.forEach(function(f) {
+      var match = regex.exec(f);
+      if (match) {
+        archives.push(match[1]);
+      }
+    });
+    
+    res.send(JSON.stringify({"archives": archives}));
+  });
+});
 
 // pcp webapi ==========================================================
 
