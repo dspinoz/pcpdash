@@ -34,7 +34,7 @@ pmprobe
 pminfo
 ```
 
-Also consider installing the followig packages for debugging utilities:
+Also consider installing the following packages for debugging utilities:
 ```bash
 yum install pcp-gui
 ```
@@ -48,3 +48,10 @@ npm install
 bower install
 node server.js
 ```
+
+When using yum to manage node packages, ensure the following
+
+```bash
+export NODE_PATH=/usr/local/lib/node_modules:/usr/lib/node_modules
+```
+
