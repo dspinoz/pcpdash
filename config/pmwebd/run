@@ -10,6 +10,10 @@ PCP_GROUP=`groups | awk '{print $1}'`
 export PCP_USER
 export PCP_GROUP
 
+# normalize archive directory
+tmp=`cd $ARCHIVE_DIR; pwd`
+ARCHIVE_DIR=$tmp
+
 exec /usr/libexec/pcp/bin/pmwebd -f --ipv4 --port=$LISTEN_PORT -A $ARCHIVE_DIR -l $LOGFILE
 
 
