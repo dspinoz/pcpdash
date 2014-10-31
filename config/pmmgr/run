@@ -1,11 +1,11 @@
 #!/bin/sh -x 
-
-PCP_RUN_DIR=`pwd`/../../logs/pmmgr
+PMMGR_HOME=`pwd`
+PCP_RUN_DIR=${PMMGR_HOME}/../../logs/pmmgr
 PCP_USER=$USER
 PCP_GROUP=`groups | awk '{print $1}'`
 PMLOGGER_PORT=9999
 PMMGR_HOSTDISCOVERY_INTERVAL=60
-PMMGR_CONFIG_DIR=`pwd`
+PMMGR_CONFIG_DIR=${PMMGR_HOME}
 
 export PCP_RUN_DIR
 export PCP_USER
@@ -15,6 +15,12 @@ export PMLOGGER_PORT
 if [[ -z "$PCP_USER" || -z "$PCP_GROUP" ]]
 then
   echo "ERROR: Could not determine user/group"
+  exit 1
+fi
+
+if [ ! -d $PCP_RUN_DIR ]
+then
+  echo "ERROR: Directory does not exit $PCP_RUN_DIR"
   exit 1
 fi
 
