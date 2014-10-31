@@ -27,8 +27,8 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="/index.html">Getting Started</a></li>
-            <li><a href="/fetch.html">Fetch</a></li>
+            <li><a href="/index.html">Getting Started</a></li>
+            <li class="active"><a href="/fetch.html">Fetch</a></li>
             <li><a href="/load.html">System Load</a></li>
           </ul>
         </div>
@@ -39,11 +39,11 @@
     <div class='container' style='font: 12px sans-serif;'>
       <div class='row'>
         <div class='span12'>
-
+          
           <div class='container' id='content'></div>
           
-          <button type="button" class="btn btn-default btn-lg" onclick="alert('Go!')">
-            <span class="glyphicon glyphicon-thumbs-up"></span> Go
+          <button type="button" class="btn btn-default btn-lg" onclick="updateData()">
+            <span class="glyphicon glyphicon-refresh"></span> Update
           </button>
 
         </div>
@@ -51,8 +51,13 @@
     </div>
     
     <script type="text/javascript">
-    
-      d3.select('#content').html('<span class="glyphicon glyphicon-ok" style="color:green">d3</span>');
+      
+      function updateData() {
+        d3.select('#content').html('<pre>'+JSON.stringify({}, false, ' ')+'</pre>');
+      }
+      
+      updateData();
+      
     
     </script>
     
