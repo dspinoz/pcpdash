@@ -4,6 +4,8 @@ PCP_RUN_DIR=`pwd`/../../logs/pmmgr
 PCP_USER=$USER
 PCP_GROUP=`groups | awk '{print $1}'`
 PMLOGGER_PORT=9999
+PMMGR_HOSTDISCOVERY_INTERVAL=60
+PMMGR_CONFIG_DIR=`pwd`
 
 export PCP_RUN_DIR
 export PCP_USER
@@ -16,5 +18,4 @@ then
   exit 1
 fi
 
-#-l run.log
-exec /usr/libexec/pcp/bin/pmmgr -c `pwd` -p 5 -vvvv
+exec /usr/libexec/pcp/bin/pmmgr -c $PMMGR_CONFIG_DIR -p $PMMGR_HOSTDISCOVERY_INTERVAL -v

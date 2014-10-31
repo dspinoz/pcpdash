@@ -15,22 +15,29 @@ Makes use of the following technologies:
 
 ## Getting Started
  
+**pcpdash requires a working web API!**
+ 
 On RHEL systems, the following commands will get you started:
 
 ```bash
 yum install pcp pcp-webapi pcp-manager
+chkconfig pmcd on
+chkconfig pmwebd on
 service pmcd start
 service pmwebd start
 ```
 
-Test the PCP installation by running the following
+Test the PCP installation by running the following:
 ```bash
 pcp
 pmprobe
 pminfo
 ```
 
-**pcpdash requires a working web API!**
+Also consider installing the followig packages for debugging utilities:
+```bash
+yum install pcp-gui
+```
 
 ## Launch pcpdash
 

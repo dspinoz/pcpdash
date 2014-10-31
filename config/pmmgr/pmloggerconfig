@@ -1,9 +1,9 @@
-log advisory on default {
-        kernel.all.load
+
+log mandatory on every 10 seconds { 
+    kernel.all.load
 }
 
 [access]
-disallow .* : all;
-disallow :* : all;
-allow local:* : enquire;
+disallow * : all;
+allow localhost : enquire;
 
