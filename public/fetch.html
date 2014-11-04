@@ -136,19 +136,17 @@
         
         d3.json("/pcpdash/archives", function(json) {
           
-          var regex = new RegExp('^(' + info.host + ')/(.*)', 'g');
-          
           var archives = [];
           
-          json.archives.forEach(function(a) {
-            
-            var match = regex.exec(a);
-            
-            if (match) {
-              archives.push({host: match[1], file: match[0]});
-            }
-          });
+          var a = json.archives[info.host];
           
+          if (!a) {
+            return;
+          }
+          
+          // value from newest archive
+          archives.push({host: info.host, file: a[0].name});
+        
           callback(null,archives);
         });
       }
