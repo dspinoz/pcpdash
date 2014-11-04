@@ -96,7 +96,8 @@ app.get('/pcpdash/archives', function(req,res) {
       return;
     }
     
-    var hosts = {};
+    var hostData = {};
+    var hosts = [];
     
     var regexMeta = /(.*)\/(.*)\/(.*?)\.meta$/g;
     
@@ -111,16 +112,23 @@ app.get('/pcpdash/archives', function(req,res) {
           
           h.date = st.mtime;
 			
-		if (hosts[h.name] == undefined || 
-			h.date.valueOf() > hosts[h.name].date.valueOf())
-		{
-			hosts[h.name] = {date: h.date, name: h.archive.path};
+		if (hostData[h.name] == undefined) {
+			hostData[h.name] = [];
+			hosts.push(h.name);
 		}
+		
+		hostData[h.name].push({name: h.archive.path, date: h.date});
       }
     });
     
+    hosts.forEach(function(h) {
+		// sorted from newest to oldest
+		hostData[h].sort(function(a,b) {
+			return b.date.valueOf() - a.date.valueOf();
+		});
+	});
     
-    res.send(JSON.stringify({"archives": hosts}));
+    res.send(JSON.stringify({"archives": hostData}));
   });
 });
 
