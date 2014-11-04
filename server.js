@@ -96,17 +96,31 @@ app.get('/pcpdash/archives', function(req,res) {
       return;
     }
     
-    var archives = [];
-    var regex = /.*\/(.*\/archive-[0-9]{8}.[0-9]{6}).meta/g;
+    var hosts = {};
+    
+    var regexMeta = /(.*)\/(.*)\/(.*?)\.meta$/g;
     
     files.forEach(function(f) {
-      var match = regex.exec(f);
+      var match = regexMeta.exec(f);
       if (match) {
-        archives.push(match[1]);
+          var h = {name: match[2], 
+                   archive: {name: match[3], path: match[2]+'/'+match[3]}
+                  };
+                   
+          var st = fs.statSync(f);
+          
+          h.date = st.mtime;
+			
+		if (hosts[h.name] == undefined || 
+			h.date.valueOf() > hosts[h.name].date.valueOf())
+		{
+			hosts[h.name] = {date: h.date, name: h.archive.path};
+		}
       }
     });
     
-    res.send(JSON.stringify({"archives": archives}));
+    
+    res.send(JSON.stringify({"archives": hosts}));
   });
 });
 
