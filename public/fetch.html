@@ -96,12 +96,28 @@
           // TODO support multiple metrics
           a.metric = {name: info.metric};
           
-          q.defer(getMetricInfo, a);
+          // multiple queries on the queue will generate multiple results
+          // see awaitAll
+          q.defer(getMetricInfo, a); //TODO client optimisation, info may not required
           q.defer(getMetricValue, a);
           
         });
         
-        q.await(function(err, metrics) {
+        q.awaitAll(function(err, metrics) {
+          console.log('all metric info', metrics);
+          
+          // cleanup the results, as multiple objects per archive will be present
+          var metricsClean = [];
+          var unique = {};
+          
+          metrics = metrics.filter(function(m) {
+            // use file to uniqely identify the archive
+            if (unique[m.file] == undefined) {
+              unique[m.file] = 1;
+              return true;
+            }
+            return false;
+          });
           
           callback(null,metrics);
         });
@@ -127,27 +143,47 @@
         });
         
         q.awaitAll(function(err, all) {
-          
+          console.log('contexts', all);
           callback(null,all);
         });
       }
       
-      function getArchives(info, callback) {
+      function getArchives(hosts, callback) {
         
         d3.json("/pcpdash/archives", function(json) {
           
           var archives = [];
           
-          var a = json.archives[info.host];
+          hosts.forEach(function(h) {
+            var a = json.archives[h];
+            
+            if (!a) {
+              return;
+            }
+            
+            // value from newest archive
+            archives.push({host: h, file: a[0].name});
+          });
           
-          if (!a) {
-            return;
-          }
-          
-          // value from newest archive
-          archives.push({host: info.host, file: a[0].name});
-        
           callback(null,archives);
+        });
+      }
+      
+      function getHosts(info, callback) {
+        
+        d3.json("/pcpdash/hosts", function(json) {
+          
+          var hosts = [];
+          var regex = new RegExp(info.host);
+          
+          json.hosts.forEach(function(h) {
+            var match = regex.exec(h);
+            if (match) {
+              hosts.push(match[0]);
+            }
+          });
+          
+          callback(null,hosts);
         });
       }
       
@@ -156,39 +192,51 @@
         var q = queue();
         
         var ctx = {
-          host: "localhost.localdomain", //TODO get from input field
+          host: ".*", //TODO get from input field
           metric: "kernel.all.load" //TODO get from input field
         };
         
-        q.defer(getArchives, ctx);
+        q.defer(getHosts, ctx);
         
-        q.await(function (err, archives) {
+        q.await(function(err, hosts) {
           
-          if (err) {
-            d3.select('#content').html(err);
-            return;
-          }
-            
-          d3.select('#content').html('<pre>GOT ARCHIVES: '+JSON.stringify(archives, false, ' ')+'</pre>');
+          console.log('hosts', hosts);
           
           q = queue();
           
-          q.defer(getContexts, archives);
+          q.defer(getArchives, hosts);
           
-          q.await(function(err, contexts) {
-            d3.select('#content').html('<pre>GOT CONTEXTS: '+JSON.stringify(contexts, false, ' ')+'</pre>');
+          q.await(function (err, archives) {
             
+            if (err) {
+              d3.select('#content').html(err);
+              return;
+            }
+              
+            d3.select('#content').html('<pre>GOT ARCHIVES: '+JSON.stringify(archives, false, ' ')+'</pre>');
+
             q = queue();
             
-            q.defer(getMetrics, {metric: ctx.metric, archives: archives});
+            q.defer(getContexts, archives);
             
-            q.await(function(err, metric) {
-              d3.select('#content').html('<pre>GOT METRIC: '+JSON.stringify(metric, false, ' ')+'</pre>');
+            q.await(function(err, contexts) {
+              d3.select('#content').html('<pre>GOT CONTEXTS: '+JSON.stringify(contexts, false, ' ')+'</pre>');
+              
+              q = queue();
+              
+              q.defer(getMetrics, {metric: ctx.metric, archives: archives});
+              
+              q.await(function(err, metrics) {
+                console.log('metrics', metrics);
+                d3.select('#content').html('<pre>GOT METRIC: '+JSON.stringify(metrics, false, ' ')+'</pre>');
+              });
+              
             });
             
           });
           
         });
+        
       }
       
       updateData();
