@@ -96,6 +96,8 @@ pmwebd.on('close', function(code) {
 // Often utilities in order to provide some extra metadata for 
 // generating queries, etc
 
+// TODO api to see which metrics are available
+
 app.get('/pcpdash/metric', function(req,res) {
 
 	// Easily request the values of particular metrics
