@@ -77,7 +77,14 @@
       }
       
       function getMetricInfo(archive, callback) {
-        d3.json("/pmapi/"+archive.context+"/_metric?prefix=" + archive.metric.name, function(json) {
+        
+        var url = "/pmapi/"+archive.context+"/_metric";
+        
+        if (archive.metric && archive.metric.name) {
+          url += "?prefix=" + archive.metric.name;
+        }
+        
+        d3.json(url, function(json) {
           
           var notMatched = [];
           
