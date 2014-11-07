@@ -8,6 +8,8 @@
     "type": "git",
     "url": "http://github.com/dspinoz/pcpdash.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "queue-async": "~1.0.7"
+  },
   "devDependencies": {}
 }

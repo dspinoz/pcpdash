@@ -6,7 +6,10 @@ var request = require('request');
 var fs      = require('fs');
 var app     = express();
 var fswalk  = require('./utils/fswalk');
+var pmweb   = require('./utils/request-pmweb');
+var pcpdash = require('./utils/request-pcpdash');
 var spawn   = require('child_process').spawn;
+var queue   = require('queue-async'); //TODO create rpm
 
 // configuration =======================================================
   
@@ -93,7 +96,72 @@ pmwebd.on('close', function(code) {
 // Often utilities in order to provide some extra metadata for 
 // generating queries, etc
 
+app.get('/pcpdash/metric', function(req,res) {
+
+	// Easily request the values of particular metrics
+	// Optionally provide a host, by default will do all hosts
+	
+	if (!req.query.q) {
+		res.send('Invalid query');
+		return;
+	}
+	
+	var q = queue();
+
+	var ctx = {
+    metric: req.query.q,
+	  host: !req.query.h ? '.*' : req.query.h
+	};
+
+	q.defer(pcpdash.getHosts, ctx);
+
+	q.await(function(err, hosts) {
+	  
+    if (err) {
+      //TODO better error handling?
+      res.send(err);
+      return;
+    }
+    
+	  //console.log('hosts', hosts);
+
+    q = queue();
+    
+    q.defer(pcpdash.getArchives, hosts);
+    
+    q.await(function (err, archives) {
+        
+      if (err) {
+        //TODO better error handling?
+        res.send(err);
+        return;
+      }
+      
+      //console.log('archives', archives);
+      
+      q = queue();
+      
+      q.defer(pmweb.getContexts, archives);
+      
+      q.await(function(err, contexts) {
+        //console.log('contexts', contexts);
+        
+        q = queue();
+        
+        q.defer(pmweb.getMetrics, {metric: ctx.metric, archives: archives});
+        
+        q.await(function(err, metrics) {
+          //console.log('metrics', metrics);
+          res.send(metrics);
+        });
+      });
+    });
+  });
+});
+
+
 app.get('/pcpdash/hosts', function(req,res) {
+  // TODO move to pcpdash file
   // TODO catch errors when reading file
   var data = fs.readFileSync(configDir+ '/target-host', {encoding: 'ascii'});
   var arr = data.split(/\n/g);
