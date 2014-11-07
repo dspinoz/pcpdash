@@ -53,7 +53,22 @@
     <script type="text/javascript">
       
       function getMetricInstanceInfo(archive, callback) {
-        d3.json("/pmapi/"+archive.context+"/_indom?indom=" + archive.metric.info.indom, function(json) {
+        
+        if (!archive.metric.info)
+        {
+          console.log("ERROR: No metric info for " + archive.metric.name);
+          callback(archive);
+          return;
+        }
+        
+        d3.json("/pmapi/"+archive.context+"/_indom?indom=" + archive.metric.info.indom, function(err, json) {
+          
+          if(err) {
+            console.log("ERROR: Invalid indom for metric instance info");
+            callback(null,archive);
+            return;
+          }
+          
           if (json && json.instances) {
             archive.metric.instances = json.instances;
           }
@@ -62,10 +77,23 @@
       }
       
       function getMetricInfo(archive, callback) {
-        d3.json("/pmapi/"+archive.context+"/_metric?names=" + archive.metric.name, function(json) {
+        d3.json("/pmapi/"+archive.context+"/_metric?prefix=" + archive.metric.name, function(json) {
           
-          // supports only a single metric
-          archive.metric.info = json.metrics[0];
+          var notMatched = [];
+          
+          json.metrics.forEach(function(m) {
+            if (m.name === archive.metric.name)
+            {
+              console.log("MMMM", m);
+              archive.metric.info = m;
+            }
+            else
+            {
+              notMatched.push(m);
+            }
+          });
+          
+          archive.metric.extras = notMatched;
           
           var q = queue();
           q.defer(getMetricInstanceInfo, archive);
@@ -76,7 +104,13 @@
       }
       
       function getMetricValue(archive, callback) {
-        d3.json("/pmapi/"+archive.context+"/_fetch?names=" + archive.metric.name, function(json) {
+        d3.json("/pmapi/"+archive.context+"/_fetch?names=" + archive.metric.name, function(err, json) {
+          
+          if (err) {
+            console.log("ERROR: Invalid metric name");
+            callback(null, archive);
+            return;
+          }
           
           if (json) {
             archive.metric.timestamp = json.timestamp;
@@ -111,7 +145,13 @@
           var unique = {};
           
           metrics = metrics.filter(function(m) {
+            if (!m || !m.file)
+            {
+              return false;
+            }
+            
             // use file to uniqely identify the archive
+            // they have the same attributes/values
             if (unique[m.file] == undefined) {
               unique[m.file] = 1;
               return true;
