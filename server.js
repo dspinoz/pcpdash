@@ -6,6 +6,7 @@ var request = require('request');
 var fs      = require('fs');
 var app     = express();
 var fswalk  = require('./utils/fswalk');
+var spawn   = require('child_process').spawn;
 
 // configuration =======================================================
   
@@ -71,11 +72,26 @@ app.get('/queue.js', function(req, res) {
   res.sendfile('bower_components/queue-async/queue.js')
 });
 
-// pcp =================================================================
+// pcp services ========================================================
 
-// TODO launch services
-//      config/pmmgr/run
-//      config/pmwebd/run
+var pmmgr = spawn('./run', [], {cwd: './config/pmmgr'});
+
+pmmgr.on('close', function(code) {
+	console.log("PMMGR exited " + code);
+	process.kill(process.pid, 'SIGINT'); //kill self
+});
+
+var pmwebd = spawn('./run', [], {cwd: './config/pmwebd'});
+
+pmwebd.on('close', function(code) {
+	console.log("PMWEBD exited " + code);
+	process.kill(process.pid, 'SIGINT'); //kill self
+});
+
+// pcpdash =============================================================
+// Provides dashboard-specific requests 
+// Often utilities in order to provide some extra metadata for 
+// generating queries, etc
 
 app.get('/pcpdash/hosts', function(req,res) {
   // TODO catch errors when reading file
@@ -152,3 +168,16 @@ app.listen(port, function() { // startup our app at http://localhost:port
 console.log('Magic happens on port ' + port); // shoutout to the user
 exports = module.exports = app; 						  // expose app
 
+// signal handling =====================================================
+
+process.on('SIGINT', function() {
+
+  pmmgr.kill("SIGINT");
+  pmwebd.kill("SIGINT");
+
+  process.exit(0);
+});
+
+process.on('exit', function(code) {
+	console.log("Server shut down");
+});
