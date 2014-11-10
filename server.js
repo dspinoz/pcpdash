@@ -4,6 +4,7 @@
 var express = require('express');
 var request = require('request');
 var fs      = require('fs');
+var path    = require('path');
 var app     = express();
 var fswalk  = require('./utils/fswalk');
 var pmweb   = require('./utils/request-pmweb');
@@ -21,6 +22,9 @@ var pcpHost = process.env.PCPHOST || 'localhost',
 var archiveDir = process.env.ARCHIVE_DIR || 'logs/pmmgr',
     configDir  = process.env.PMMGR_CONFIG_DIR || 'config/pmmgr';
     
+var pcpdash_pages = [ {title: 'Index', href:'/index'}, 
+					  {title: 'Testing', href:'/test'} ];
+    
 app.configure(function() {
   
   // the order of app middleware is important - invoked sequentially!
@@ -28,14 +32,28 @@ app.configure(function() {
   
   app.use(express.static(__dirname + '/public')); 	// set the static files location
   //app.use(express.logger('dev')); 					      // log only non-public content
+  //app.use(express.errorHandler());
+  
+  //pretty print templated resources
+  app.locals.pretty = true;
+  
+  app.set('view engine', 'jade');
+  app.set('views', __dirname + '/views');
+});
+
+    
+// jade-templated files  ====================================================
+
+app.get('/index', function(req,res) {
+	res.render('index', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
+app.get('/test', function(req,res) {
+	res.render('test', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
 });
 
     
 // static files  =======================================================
-
-app.get('/test', function(req,res) {
-  res.sendfile('test.json');
-});
 
 // TODO load minified in production environment
 
@@ -84,11 +102,31 @@ pmmgr.on('close', function(code) {
 	process.kill(process.pid, 'SIGINT'); //kill self
 });
 
+pmmgr.stderr.on('data', function(d) {
+	// TODO format logs
+	console.log('PMMGR: ' + d);
+});
+
+pmmgr.stdout.on('data', function(d) {
+	// TODO format logs
+	console.log('PMMGR: ' + d);
+});
+
 var pmwebd = spawn('./run', [], {cwd: './config/pmwebd'});
 
 pmwebd.on('close', function(code) {
 	console.log("PMWEBD exited " + code);
 	process.kill(process.pid, 'SIGINT'); //kill self
+});
+
+pmwebd.stderr.on('data', function(d) {
+	// TODO format logs
+	console.log('PMWEBD: ' + d);
+});
+
+pmwebd.stdout.on('data', function(d) {
+	// TODO format logs
+	console.log('PMWEBD: ' + d);
 });
 
 // pcpdash =============================================================
