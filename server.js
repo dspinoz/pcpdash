@@ -11,6 +11,7 @@ var pmweb   = require('./utils/request-pmweb');
 var pcpdash = require('./utils/request-pcpdash');
 var spawn   = require('child_process').spawn;
 var queue   = require('queue-async'); //TODO create rpm
+var colors  = require('colors');
 
 // configuration =======================================================
   
@@ -41,6 +42,21 @@ app.configure(function() {
   app.set('views', __dirname + '/views');
 });
 
+colors.setTheme({
+  silly: 'rainbow',
+  input: 'grey',
+  verbose: 'cyan',
+  prompt: 'grey',
+  info: 'green',
+  data: 'grey',
+  help: 'cyan',
+  warn: 'yellow',
+  debug: 'blue',
+  error: 'red',
+  
+  pmmgr: 'white',
+  pmwebd: 'white'
+});
     
 // jade-templated files  ====================================================
 
@@ -95,38 +111,38 @@ app.get('/queue.js', function(req, res) {
 
 // pcp services ========================================================
 
+console.log(colors.info('Launching pmmgr'));
+
 var pmmgr = spawn('./run', [], {cwd: './config/pmmgr'});
 
 pmmgr.on('close', function(code) {
-	console.log("PMMGR exited " + code);
+	console.log(colors.info("pmmgr exited " + code));
 	process.kill(process.pid, 'SIGINT'); //kill self
 });
 
 pmmgr.stderr.on('data', function(d) {
-	// TODO format logs
-	console.log('PMMGR: ' + d);
+	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
 
 pmmgr.stdout.on('data', function(d) {
-	// TODO format logs
-	console.log('PMMGR: ' + d);
+	console.log(colors.pmmgr(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
+
+console.log(colors.info('Launching pmwebd'));
 
 var pmwebd = spawn('./run', [], {cwd: './config/pmwebd'});
 
 pmwebd.on('close', function(code) {
-	console.log("PMWEBD exited " + code);
+	console.log(colors.info("pmwebd exited " + code));
 	process.kill(process.pid, 'SIGINT'); //kill self
 });
 
 pmwebd.stderr.on('data', function(d) {
-	// TODO format logs
-	console.log('PMWEBD: ' + d);
+	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
 
 pmwebd.stdout.on('data', function(d) {
-	// TODO format logs
-	console.log('PMWEBD: ' + d);
+	console.log(colors.pmwebd(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
 
 // pcpdash =============================================================
@@ -160,6 +176,7 @@ app.get('/pcpdash/metric', function(req,res) {
     if (err) {
       //TODO better error handling?
       res.send(err);
+      console.log(colors.error(err));
       return;
     }
     
@@ -270,11 +287,11 @@ app.get('/pmapi/*', function(req,res) {
 // start app ===========================================================
 
 app.listen(port, function() { // startup our app at http://localhost:port
-  console.log("listening...");
+  console.log(colors.debug("listening..."));
 });
 
-console.log('Magic happens on port ' + port); // shoutout to the user
-exports = module.exports = app; 						  // expose app
+console.log(colors.info('Magic happens on port ' + port)); // shoutout to the user
+exports = module.exports = app; 						   // expose app
 
 // signal handling =====================================================
 
@@ -287,5 +304,5 @@ process.on('SIGINT', function() {
 });
 
 process.on('exit', function(code) {
-	console.log("Server shut down");
+	console.log(colors.debug("Server shut down"));
 });
