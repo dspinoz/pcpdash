@@ -1,0 +1,20 @@
+extends container
+block container
+
+  #metric
+  
+  script(type='text/javascript').
+
+    function updateData() {
+      var ctx = {
+        h: ".*", //TODO get from input field
+        q: "kernel.all.load" //TODO get from input field
+      };
+
+      d3.json("/pcpdash/metric?q="+ctx.q+"&h="+ctx.h, function(err,json) {
+        console.log('metrics', json);
+        d3.select('#metric').html('<pre>GOT METRIC: '+JSON.stringify(json, false, ' ')+'</pre>');
+      });
+    }
+
+    updateData();

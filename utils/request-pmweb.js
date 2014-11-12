@@ -39,7 +39,7 @@ exports.getMetricInstanceInfo = function(archive, callback) {
         
   if (!archive.metric.info)
   {
-    console.log("ERROR: No metric info for " + archive.metric.name);
+    console.log("ERROR: No metric info for " + archive.metric.name + ", host " + archive.host);
     callback(archive);
     return;
   }
@@ -102,8 +102,13 @@ exports.getMetricValue = function(archive, callback) {
       return;
     }
     
-    if (json) {
+    if (json.timestamp && json.values) {
       archive.metric.timestamp = json.timestamp;
+      archive.metric.timestamp.date = new Date((json.timestamp.s *1000) + (json.timestamp.us / 1000));
+      
+      var time = new Date();
+      archive.metric.timestamp.date.setHours(archive.metric.timestamp.date.getHours() + (time.getTimezoneOffset() / 60)); 
+      
       archive.metric.values = json.values;
     }
     

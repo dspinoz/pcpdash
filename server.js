@@ -24,7 +24,9 @@ var archiveDir = process.env.ARCHIVE_DIR || 'logs/pmmgr',
     configDir  = process.env.PMMGR_CONFIG_DIR || 'config/pmmgr';
     
 var pcpdash_pages = [ {title: 'Index', href:'/index'}, 
-					  {title: 'Testing', href:'/test'} ];
+					  {title: 'Testing', href:'/test'},
+					  {title: 'Fetch', href:'/fetch'}, 
+					  {title: 'Bar Chart', href:'/bar'} ];
     
 app.configure(function() {
   
@@ -66,6 +68,14 @@ app.get('/index', function(req,res) {
 
 app.get('/test', function(req,res) {
 	res.render('test', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
+app.get('/fetch', function(req,res) {
+	res.render('fetch', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
+app.get('/bar', function(req,res) {
+	res.render('bar', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
 });
 
     

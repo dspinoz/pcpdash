@@ -1,0 +1,136 @@
+extends container
+block container
+
+  style(type="text/css").
+    
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .bar {
+      fill: steelblue;
+    }
+    
+    .bar:hover {
+      fill: LightSlateGray;
+    }
+    
+
+
+  #barchart
+  #metric
+  
+  script(type='text/javascript').
+
+    var margin = {top: 20, right: 20, bottom: 100, left: 40},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var xValue = function(d) { return d.host; }, // data -> value
+        xScale = d3.scale.ordinal().rangeRoundBands([0, width], .1), // value -> display
+        xMap = function(d) { return xScale(xValue(d)); }, // data -> display
+        xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+    var yValue = function(d) { return d.metric.values[0].instances[0].value; }, // data -> value
+        yScale = d3.scale.linear().range([height, 0]), // value -> display
+        yMap = function(d) { return yScale(yValue(d)); }, // data -> display
+        yAxis = d3.svg.axis().scale(yScale).orient("left"),
+        yAxisLabel = function(d) { return "Value"; };
+
+    var svg = d3.select("#barchart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    d3.json("/pcpdash/metric?q=kernel.all.load", function(err,json) {
+      console.log('metrics', json);
+      d3.select('#metric').html('<pre>GOT METRIC: '+JSON.stringify(json, false, ' ')+'</pre>');
+      
+      xScale.domain(json.map(function(d) {
+        return d.host;
+      }));
+      
+      var maxes = [];
+      json.forEach(function(h) {
+        if (!h.metric.values)
+        {
+          return;
+        }
+        h.metric.values.forEach(function(v) {
+          maxes.push(d3.max(v.instances, function(i) {
+            return i.value;
+          }));
+        });
+      });
+      
+      yScale.domain([0, d3.max(maxes)]);
+      
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+          .selectAll("text")  
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-65)");
+          
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text(yAxisLabel);
+      
+    svg.selectAll(".bar")
+        .data(json)
+      .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", xMap)
+        .attr("width", xScale.rangeBand)
+        .attr("y", yMap)
+        .attr("height", function(d) { return height - yMap(d); });
+      
+    });
+    /*
+    // barchart
+    xScale.domain(pcpMetric.values.map(xValue));
+    yScale.domain([0, d3.max(pcpMetric.values, yValue)]);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")  
+          .style("text-anchor", "end")
+          .attr("dx", "-.8em")
+          .attr("dy", ".15em")
+          .attr("transform", "rotate(-65)");
+        
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text(yAxisLabel);
+
+    svg.selectAll(".bar")
+        .data(pcpMetric.values)
+      .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", xMap)
+        .attr("width", xScale.rangeBand)
+        .attr("y", yMap)
+        .attr("height", function(d) { return height - yMap(d); });
+    */
