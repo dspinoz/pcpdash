@@ -6,13 +6,22 @@ var queue   = require('queue-async');
 
 exports.port = process.env.PORT || 8080; // set our port 
                                          // TODO pmwebd port
-
+                                         
+exports.contexts = {}; // global mapping for PMWEBAPI contexts
+                                         
 exports.getContext = function(archive, callback) {
-
+  
+  if (exports.contexts[archive.file]) {
+    archive.context = exports.contexts[archive.file];
+    callback(null,archive);
+    return;
+  }
+  
   //TODO request to pmwebd not local server
   request({url: 'http://localhost:'+exports.port+"/pmapi/context?archivefile=" + archive.file, json: true}, function(err,resp,json) {
     
     archive.context = json.context;
+    exports.contexts[archive.file] = json.context;
     
     callback(null,archive);
   });
