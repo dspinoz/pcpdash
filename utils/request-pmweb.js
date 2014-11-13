@@ -93,26 +93,59 @@ exports.getMetricInfo = function(archive, callback) {
   });
 };
       
-exports.getMetricValue = function(archive, callback) {
-  request({url: 'http://localhost:'+exports.port+"/pmapi/"+archive.context+"/_fetch?names=" + archive.metric.name, json: true}, function(err,resp,json) {
+exports.getMetricValue = function(ctx, callback) {
+  request({url: 'http://localhost:'+exports.port+"/pmapi/"+ctx.archive.context+"/_fetch?names=" + ctx.archive.metric.name, json: true}, function(err,resp,json) {
     
     if (err) {
       console.log("ERROR: Invalid metric name");
-      callback(null, archive);
+      callback(null, ctx.archive);
       return;
     }
     
     if (json.timestamp && json.values) {
-      archive.metric.timestamp = json.timestamp;
-      archive.metric.timestamp.date = new Date((json.timestamp.s *1000) + (json.timestamp.us / 1000));
       
-      var time = new Date();
-      archive.metric.timestamp.date.setHours(archive.metric.timestamp.date.getHours() + (time.getTimezoneOffset() / 60)); 
+      if (!ctx.archive.metric.values) {
+        ctx.archive.metric.values = [];
+      }
       
-      archive.metric.values = json.values;
+      var info = { timestamp: json.timestamp };
+      
+      var now = new Date();
+      var date = new Date((json.timestamp.s *1000) + (json.timestamp.us / 1000));
+      
+      // convert to local timezone?
+      //date.setHours(date.getHours() + (now.getTimezoneOffset() / 60)); 
+      
+      info.timestamp.date = date.toString();
+      
+      console.log(ctx.archive.host + ' got ' + info.timestamp.date);
+      
+      info.values = json.values;
+      
+      ctx.archive.metric.values.push(info);
+      
+      // get the next value from the archive
+      ctx.q.defer(exports.getMetricValue, ctx);
+    }
+    else
+    {
+      console.log(ctx.archive.host + " got all metric values");
     }
     
-    callback(null,archive);
+    callback(null,ctx);
+  });
+};
+
+exports.getMetricValues = function(archive, callback) {
+  var q = queue();
+  
+  var ctx = { q: q, archive: archive };
+  
+  q.defer(exports.getMetricValue, ctx);
+  
+  q.awaitAll(function(err, values) {
+    // ctx modifies the archive passed in
+    callback(null, null);
   });
 };
       
@@ -128,14 +161,13 @@ exports.getMetrics = function(info, callback) {
     // multiple queries on the queue will generate multiple results
     // see awaitAll
     q.defer(exports.getMetricInfo, a); //TODO client optimisation, info may not required
-    q.defer(exports.getMetricValue, a);
+    q.defer(exports.getMetricValues, a);
   });
   
   q.awaitAll(function(err, metrics) {
     //console.log('all metric info', metrics);
     
     // cleanup the results, as multiple objects per archive will be present
-    var metricsClean = [];
     var unique = {};
     
     metrics = metrics.filter(function(m) {

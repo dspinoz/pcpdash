@@ -250,13 +250,13 @@ app.get('/pcpdash/archives', function(req,res) {
     var hostData = {};
     var hosts = [];
     
-    var regexMeta = /(.*)\/(.*)\/(.*?)\.meta$/g;
+    var regexMeta = /(.*)\/(.*)\/(.*?)(\.meta)$/g;
     
     files.forEach(function(f) {
       var match = regexMeta.exec(f);
       if (match) {
           var h = {name: match[2], 
-                   archive: {name: match[3], path: match[2]+'/'+match[3]}
+                   archive: {name: match[3], path: match[2]+'/'+match[3]+match[4]}
                   };
                    
           var st = fs.statSync(f);
