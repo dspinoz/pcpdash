@@ -84,6 +84,7 @@ exports.getMetricInfo = function(archive, callback) {
     if(err)
     {
       console.log('ERROR getMetricInfo:', err);
+      delete exports.contexts[archive.file];
       callback(err,null);
       return;
     }
@@ -92,6 +93,9 @@ exports.getMetricInfo = function(archive, callback) {
     {
       err = {message: 'no metrics available from _metric'};
       console.log("ERROR getMetricInfo:", err);
+      
+      delete exports.contexts[archive.file];
+      
       callback(err, null);
       return;
     }
@@ -122,6 +126,7 @@ exports.getMetricValue = function(ctx, callback) {
     
     if (err) {
       console.log("ERROR: Invalid metric name");
+      delete exports.contexts[ctx.archive.file];
       callback(null, ctx.archive);
       return;
     }
