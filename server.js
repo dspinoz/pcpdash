@@ -334,6 +334,7 @@ app.get('/pcpdash/archives', function(req,res) {
 //      manage the available archives/hosts/metrics
 
 app.get('/pmapi/*', function(req,res) {
+  // TODO log proxy requests to cube
   req.pipe(request('http://' +pcpHost +':'+ pcpPort + req.originalUrl)).pipe(res);
 });
 
