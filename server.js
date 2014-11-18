@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// TODO better logging (with levels and timestamps?)
+
 // modules =============================================================
 var express = require('express');
 var request = require('request');
@@ -191,6 +193,9 @@ cube_evaluator.stdout.on('data', function(d) {
 	console.log(colors.cube_evaluator(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
 
+// pcpdash services ====================================================
+
+// TODO launch pcp2cube.js
 
 // pcpdash =============================================================
 // Provides dashboard-specific requests 
@@ -198,6 +203,7 @@ cube_evaluator.stdout.on('data', function(d) {
 // generating queries, etc
 
 // TODO api to see which metrics are available
+// TODO private API for dash utilities
 
 app.get('/pcpdash/metric', function(req,res) {
 
@@ -347,6 +353,7 @@ process.on('SIGINT', function() {
   pmmgr.kill("SIGINT");
   pmwebd.kill("SIGINT");
 
+  //TODO make sure all the services have stopped 
   process.exit(0);
 });
 

@@ -28,7 +28,7 @@ var getData = function() {
     var events = [];
     
     //TODO request to pmwebd not local server
-    // Will only pull the latest metrics
+    //TODO use private api to only pull the latest metrics
     request({url: 'http://localhost:'+port+"/pcpdash/metric?q="+ctx.q+"&h="+ctx.h, json: true}, 
             function(err,resp,json) {
               
