@@ -81,6 +81,21 @@ exports.getMetricInfo = function(archive, callback) {
     
     var notMatched = [];
     
+    if(err)
+    {
+      console.log('ERROR getMetricInfo:', err);
+      callback(err,null);
+      return;
+    }
+    
+    if (!json.metrics || json.metrics.length == 0)
+    {
+      err = {message: 'no metrics available from _metric'};
+      console.log("ERROR getMetricInfo:", err);
+      callback(err, null);
+      return;
+    }
+    
     json.metrics.forEach(function(m) {
       if (m.name === archive.metric.name)
       {
@@ -127,7 +142,7 @@ exports.getMetricValue = function(ctx, callback) {
       
       info.timestamp.date = date.toString();
       
-      console.log(ctx.archive.host + ' got ' + info.timestamp.date);
+      //console.log(ctx.archive.host + ' got ' + info.timestamp.date);
       
       info.values = json.values;
       
@@ -136,9 +151,9 @@ exports.getMetricValue = function(ctx, callback) {
       // get the next value from the archive
       ctx.q.defer(exports.getMetricValue, ctx);
     }
-    else
+    else if (ctx.archive.metric.values && ctx.archive.metric.values.length)
     {
-      console.log(ctx.archive.host + " got all metric values");
+      console.log(ctx.archive.host + " got " + ctx.archive.metric.values.length + " metric values");
     }
     
     callback(null,ctx);
@@ -174,6 +189,13 @@ exports.getMetrics = function(info, callback) {
   });
   
   q.awaitAll(function(err, metrics) {
+    
+    if (err)
+    {
+      callback(err, null);
+      return;
+    }
+    
     //console.log('all metric info', metrics);
     
     // cleanup the results, as multiple objects per archive will be present
