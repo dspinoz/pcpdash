@@ -57,7 +57,9 @@ colors.setTheme({
   error: 'red',
   
   pmmgr: 'white',
-  pmwebd: 'white'
+  pmwebd: 'white',
+  cube_collector: 'white',
+  cube_evaluator: 'white'
 });
     
 // jade-templated files  ====================================================
@@ -154,6 +156,41 @@ pmwebd.stderr.on('data', function(d) {
 pmwebd.stdout.on('data', function(d) {
 	console.log(colors.pmwebd(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
+
+// cube services =======================================================
+
+//TODO use the cube library and instantiate here
+
+var cube_collector = spawn('/usr/bin/cube-collector');
+
+cube_collector.on('close', function(code) {
+	console.log(colors.info("cube-collector exited " + code));
+	process.kill(process.pid, 'SIGINT'); //kill self
+});
+
+cube_collector.stderr.on('data', function(d) {
+	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
+});
+
+cube_collector.stdout.on('data', function(d) {
+	console.log(colors.cube_collector(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
+});
+
+var cube_evaluator = spawn('/usr/bin/cube-evaluator');
+
+cube_evaluator.on('close', function(code) {
+	console.log(colors.info("cube-collector exited " + code));
+	process.kill(process.pid, 'SIGINT'); //kill self
+});
+
+cube_evaluator.stderr.on('data', function(d) {
+	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
+});
+
+cube_evaluator.stdout.on('data', function(d) {
+	console.log(colors.cube_evaluator(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
+});
+
 
 // pcpdash =============================================================
 // Provides dashboard-specific requests 
