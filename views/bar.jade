@@ -23,7 +23,6 @@ block container
     }
     
   #barchart
-  pre#event
   
   //- TODO dynamically update as new data is available for host
   //- TODO determine how many events to query for
@@ -62,11 +61,9 @@ block container
     d3.json("/event?expression=kernel(all.load)&limit=2", function(error, data) {
       
       if (error) {
-        d3.select("#event").text(error);
+        console.log(error);
         return;
       }
-      
-      d3.select("#event").text(JSON.stringify(data,false,' '));
       
       xScale.domain(data.map(xValue));
       yScale.domain([0, d3.max(data, yValue)]);
