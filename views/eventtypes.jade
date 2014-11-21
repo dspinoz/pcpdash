@@ -1,0 +1,171 @@
+extends container
+block container
+
+  style(type='text/css').
+  
+    table {
+      border-collapse: collapse;
+    }
+    
+    .pointer 
+    { 
+      cursor: pointer; 
+    }
+  
+  table.table.table-hover#event-types
+    thead
+    tbody
+    
+  //- TODO use websockets instead of polling. no setInterval
+  script(type='text/javascript').
+    
+    var steps = [
+      {name: '10-sec', step: '1e4'},
+      {name: '1-min', step: '6e4'}, 
+      {name: '5-min', step: '3e5'},
+      {name: '1-hr', step: '36e5'},
+      {name: '1-day', step: '864e5'}
+    ];
+    
+    // easy lookup for sort
+    var stepIndexes = {};
+    steps.forEach(function(s,i) {
+      stepIndexes[s.name] = i;
+    });
+    
+    var table = d3.select('table#event-types');
+    
+    table.select('thead').append('tr')
+      .selectAll('th')
+      .data(function() {
+        var x = steps.slice();
+        x.unshift({name:'Type'});
+        return x;
+      })
+      .enter()
+      .append('th')
+      .text(function(d) {
+        return d.name;
+      });
+  
+    function getSum(info, callback)
+    {
+      d3.json('/metric?expression=sum('+info.type+')&step='+info.step.step+'&limit=1', function(metric) {
+        info.data[info.step.name] = metric[0];
+        callback(null,null);
+      });
+    }
+    
+    function getTypes(info, callback)
+    {
+      d3.json("/types", function(types) {
+        types.forEach(function(t) {
+          info.data[t] = { steps: {} };
+          steps.forEach(function(s) {
+            info.queue.defer(getSum, {type: t, step: s, data: info.data[t].steps});
+          });
+        });
+        callback(null,null);
+      });
+    }
+    
+    function updateData()
+    {
+      var q = queue();
+      var tdata = {};
+      
+      q.defer(getTypes, {data: tdata, queue: q});
+      
+      q.await(function() {
+        var data = d3.entries(tdata);
+        data.forEach(function(t) {
+          t.value.stepsArr = d3.entries(t.value.steps);
+          t.value.stepsArr.sort(function(a,b) {
+            return stepIndexes[a.key] - stepIndexes[b.key];
+          });
+          delete t.value.steps;
+        });
+        
+        render(data);
+      });
+    }
+
+    function render(data) {
+    
+      var tr = table.select('tbody')
+        .selectAll('tr')
+        .data(data);
+        
+      tr
+        .enter()
+        .append('tr')
+        .attr('id', function(d) {
+          return d.key;
+        })
+        .attr('class', 'pointer')
+        .on('click', function(d) {
+          window.location = '/heatmap?type=' + d.key;
+        });
+        
+      tr
+        .exit()
+        .remove();
+        
+        
+      var td = tr.selectAll('td')
+        .data(function (d) {
+          //to create all the cells
+          var x = d.value.stepsArr.slice();
+          x.unshift({key: d.key});
+          return x;
+        });
+      
+      td
+        .html(function (d) {
+          if (d.value)
+          {
+            if (d3.select(this).text() != d.value.value)
+            {
+              return '<span class="label label-info">' + d.value.value + '</span>';
+            }
+            return d.value.value;
+          }
+          return d.key;
+        })
+        .transition()
+        .delay(1000)
+        .text(function (d) {
+          if (d.value)
+          {
+            return d.value.value;
+          }
+          return d.key;
+        });
+        
+      td
+        .enter()
+        .append('td')
+        .attr('class', 'success')
+        .text(function (d) {
+          if (d.value)
+          {
+            return d.value.value;
+          }
+          return d.key;
+        })
+        .transition()
+        .delay(1000)
+        .attr('class', 'default');
+      
+      td
+        .exit()
+        .selectAll('td')
+        .attr('class', 'error')
+        .transition()
+        .delay(1000)
+        .remove();
+    }
+    
+    updateData();
+  
+    setInterval(updateData, 5000);
