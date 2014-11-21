@@ -25,12 +25,13 @@ var pcpHost = process.env.PCPHOST || 'localhost',
 var archiveDir = process.env.ARCHIVE_DIR || 'logs/pmmgr',
     configDir  = process.env.PMMGR_CONFIG_DIR || 'config/pmmgr';
     
-var pcpdash_pages = [ {title: 'Index', href:'/index'}, 
-					  {title: 'Testing', href:'/test'},
-					  {title: 'Fetch', href:'/fetch'}, 
-					  {title: 'Bar Chart', href:'/bar'}, 
+var pcpdash_pages = [ //{title: 'Index', href:'/index'}, 
+					  //{title: 'Testing', href:'/test'},
+					  //{title: 'Fetch', href:'/fetch'}, 
 					  {title: 'Events', href:'/eventtypes'}, 
-					  {title: 'Heat Map', href:'/heatmap'} ];
+					  {title: 'Heat Map', href:'/heatmap'},
+					  {title: 'Bar Chart', href:'/bar'},
+					  {title: 'Rainbow', href:'/arcs'} ];
     
 var cubeHost = 'localhost',
     cubePort = 1081;
@@ -85,6 +86,10 @@ app.get('/fetch', function(req,res) {
 
 app.get('/bar', function(req,res) {
 	res.render('bar', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
+app.get('/arcs', function(req,res) {
+	res.render('arcs', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
 });
 
 app.get('/eventtypes', function(req,res) {

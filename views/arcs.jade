@@ -1,0 +1,216 @@
+extends container
+block container
+    
+  //- TODO define styles for transitional values
+  style(type="text/css").
+  
+    text {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+    }
+     
+  //- TODO dynamically get the number of hosts
+  //- TODO support multiple rainbow charts, one for each host
+  //- TODO dynamically get the total number of cores, specific to host
+  #rainbow
+    
+  //- http://bl.ocks.org/mbostock/5100636
+  //- http://bl.ocks.org/mbostock/1346410
+  script(type='text/javascript').
+        
+    var width = 960,
+      height = 500,
+      radius = Math.min(width, height) / 2,
+      cores = 1;
+  
+    // control the start/end points for the arc
+    // TBD what to do when > 1 ?
+    var scale = d3.scale.linear()
+      .domain([0, cores]) //max load value
+      .range([- Math.PI/2, Math.PI/2]); //radians
+      
+    var arc = d3.svg.arc()
+        .outerRadius(radius - 20);
+    
+    var svg = d3.select("#rainbow").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+      .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    var bg = svg.append("path")
+      .attr("id", "max")
+      .datum({startAngle: scale(0), endAngle: scale(cores), innerRadius:radius-100})
+      .style("fill", "eee")
+      .attr("d", arc);
+        
+    svg.append("path")
+      .attr("id", "long")
+      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-80})
+      .style("fill", "ddd")
+      .attr("d", arc)
+      .each(function(d) { console.log(d); this._current = d; });
+      
+    svg.append("path")
+      .attr("id", "mid")
+      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-60})
+      .style("fill", "ccc")
+      .attr("d", arc)
+      .each(function(d) { console.log(d); this._current = d; });
+      
+    svg.append("path")
+      .attr("id", "short")
+      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-40})
+      .style("fill", "bbb")
+      .attr("d", arc)
+      .each(function(d) { console.log(d); this._current = d; });
+
+    var host = svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "-.5em")
+        .text('hh');
+        
+    var curr = svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "-2em")
+        .text('cc');
+
+    function updateData() {
+    
+      d3.json("/event?expression=kernel(all.load)&limit=2", function(json) {
+
+        console.log(json);
+        var data = {};
+
+        json.forEach(function(d) {
+            
+          data.host = d.data.all.load.host;
+          data.time = d.time;
+        
+          d.data.all.load.values.forEach(function(v) {
+            switch(v.instance) {
+              case 1:
+                data['short'] = v.value;
+                break;
+              case 5:
+                data['med'] = v.value;
+                break;
+              case 15:
+                data['long'] = v.value;
+                break;
+              default:
+                console.log("Invalid instance", v);
+                break;
+            }
+          });
+        });
+
+        console.log(data);
+        
+        host.text(data.host);
+        curr.text(data.short);
+        
+        var sp = svg.select("path#short")
+          .datum({startAngle: scale(0), 
+                  // don't overdraw arc when over 100%
+                  endAngle: scale(Math.min(data.short/cores, 1.0)), 
+                  innerRadius: radius-40,
+                  load: data.short,
+                  perc: data.short/cores});
+        
+        sp.transition()
+          .duration(750)
+          .attrTween("d", arcTween);
+          
+        sp.transition()
+          .delay(750)
+          .style('fill', function(d) {
+            if (d.perc > 1.0)
+            {
+              return '#b00';
+            }
+            return '#bbb';
+          });
+            
+            
+            
+            
+            
+        var mp = svg.select("path#mid")
+          .datum({startAngle: scale(0), 
+                  // don't overdraw arc when over 100%
+                  endAngle: scale(Math.min(data.med/cores, 1.0)), 
+                  innerRadius: radius-60,
+                  load: data.med,
+                  perc: data.med/cores});
+        
+        mp.transition()
+          .duration(750)
+          .attrTween("d", arcTween);
+          
+        mp.transition()
+          .delay(750)
+          .style('fill', function(d) {
+            if (d.perc > 1.0)
+            {
+              return '#c00';
+            }
+            return '#ccc';
+          });
+           
+        var lp = svg.select("path#long")
+          .datum({startAngle: scale(0), 
+                  // don't overdraw arc when over 100%
+                  endAngle: scale(Math.min(data.long/cores, 1.0)), 
+                  innerRadius: radius-80,
+                  load: data.long,
+                  perc: data.long/cores});
+        
+        lp.transition()
+          .duration(750)
+          .attrTween("d", arcTween);
+          
+        lp.transition()
+          .delay(750)
+          .style('fill', function(d) {
+            if (d.perc > 1.0)
+            {
+              return '#d00';
+            }
+            return '#ddd';
+          });
+        
+        
+        if (data.short > cores &&
+            data.med > cores && 
+            data.long > cores)
+        {
+          bg.transition()
+            .delay(750)
+            .style('fill', '#e00');
+        }
+        else
+        {
+          bg.transition()
+            .delay(750)
+            .style('fill', '#eee');
+        }
+      });
+    }
+
+
+    // Store the displayed angles in _current.
+    // Then, interpolate from _current to the new angles.
+    // During the transition, _current is updated in-place by d3.interpolate.
+    function arcTween(a) {
+      var i = d3.interpolate(this._current, a);
+      this._current = i(0);
+      return function(t) {
+        return arc(i(t));
+      };
+    }
+
+    updateData();
+
+    setInterval(updateData, 10000);
