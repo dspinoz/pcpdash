@@ -19,6 +19,11 @@ exports.getContext = function(archive, callback) {
   
   //TODO request to pmwebd not local server
   request({url: 'http://localhost:'+exports.port+"/pmapi/context?archivefile=" + archive.file, json: true}, function(err,resp,json) {
+  
+    if(err) {
+      callback(err,null);
+      return;
+    }
     
     archive.context = json.context;
     exports.contexts[archive.file] = json.context;
