@@ -46,9 +46,9 @@ block container
       .attr("d", arc);
         
     svg.append("path")
-      .attr("id", "long")
+      .attr("id", "short")
       .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-80})
-      .style("fill", "ddd")
+      .style("fill", "bbb")
       .attr("d", arc)
       .each(function(d) { console.log(d); this._current = d; });
       
@@ -60,11 +60,13 @@ block container
       .each(function(d) { console.log(d); this._current = d; });
       
     svg.append("path")
-      .attr("id", "short")
+      .attr("id", "long")
       .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-40})
-      .style("fill", "bbb")
+      .style("fill", "ddd")
       .attr("d", arc)
       .each(function(d) { console.log(d); this._current = d; });
+      
+      
 
     var host = svg.append("text")
         .attr("text-anchor", "middle")
@@ -115,7 +117,7 @@ block container
           .datum({startAngle: scale(0), 
                   // don't overdraw arc when over 100%
                   endAngle: scale(Math.min(data.short/cores, 1.0)), 
-                  innerRadius: radius-40,
+                  innerRadius: radius-80,
                   load: data.short,
                   perc: data.short/cores});
         
@@ -163,7 +165,7 @@ block container
           .datum({startAngle: scale(0), 
                   // don't overdraw arc when over 100%
                   endAngle: scale(Math.min(data.long/cores, 1.0)), 
-                  innerRadius: radius-80,
+                  innerRadius: radius-40,
                   load: data.long,
                   perc: data.long/cores});
         
