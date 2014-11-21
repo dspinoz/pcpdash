@@ -28,7 +28,12 @@ var archiveDir = process.env.ARCHIVE_DIR || 'logs/pmmgr',
 var pcpdash_pages = [ {title: 'Index', href:'/index'}, 
 					  {title: 'Testing', href:'/test'},
 					  {title: 'Fetch', href:'/fetch'}, 
-					  {title: 'Bar Chart', href:'/bar'} ];
+					  {title: 'Bar Chart', href:'/bar'}, 
+					  {title: 'Events', href:'/eventtypes'}, 
+					  {title: 'Heat Map', href:'/heatmap'} ];
+    
+var cubeHost = 'localhost',
+    cubePort = 1081;
     
 app.configure(function() {
   
@@ -80,6 +85,14 @@ app.get('/fetch', function(req,res) {
 
 app.get('/bar', function(req,res) {
 	res.render('bar', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
+app.get('/eventtypes', function(req,res) {
+	res.render('eventtypes', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
+app.get('/heatmap', function(req,res) {
+	res.render('heatmap', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
 });
 
     
@@ -336,6 +349,20 @@ app.get('/pcpdash/archives', function(req,res) {
 app.get('/pmapi/*', function(req,res) {
   // TODO log proxy requests to cube
   req.pipe(request('http://' +pcpHost +':'+ pcpPort + req.originalUrl)).pipe(res);
+});
+
+// cube webapi ===========================================
+    
+app.get('/types', function(req,res) {
+  req.pipe(request('http://' +cubeHost +':'+ cubePort+ '/1.0' + req.originalUrl)).pipe(res);
+});
+
+app.get('/metric', function(req,res) {
+  req.pipe(request('http://' +cubeHost +':'+ cubePort+ '/1.0' + req.originalUrl)).pipe(res);
+});
+
+app.get('/event', function(req,res) {
+  req.pipe(request('http://' +cubeHost +':'+ cubePort+ '/1.0' + req.originalUrl)).pipe(res);
 });
 
 // start app ===========================================================
