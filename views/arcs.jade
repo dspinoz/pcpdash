@@ -46,9 +46,9 @@ block container
       .attr("d", arc);
         
     svg.append("path")
-      .attr("id", "long")
-      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-40})
-      .style("fill", "ddd")
+      .attr("id", "short")
+      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-80})
+      .style("fill", "bbb")
       .attr("d", arc)
       .each(function(d) { console.log(d); this._current = d; });
       
@@ -60,9 +60,9 @@ block container
       .each(function(d) { console.log(d); this._current = d; });
       
     svg.append("path")
-      .attr("id", "short")
-      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-80})
-      .style("fill", "bbb")
+      .attr("id", "long")
+      .datum({startAngle: scale(0), endAngle: scale(0), innerRadius: radius-40})
+      .style("fill", "ddd")
       .attr("d", arc)
       .each(function(d) { console.log(d); this._current = d; });
       
@@ -130,9 +130,9 @@ block container
           .style('fill', function(d) {
             if (d.perc > 1.0)
             {
-              return '#b00';
+              return '#d00';
             }
-            return '#bbb';
+            return '#ddd';
           });
             
             
@@ -178,9 +178,9 @@ block container
           .style('fill', function(d) {
             if (d.perc > 1.0)
             {
-              return '#d00';
+              return '#b00';
             }
-            return '#ddd';
+            return '#bbb';
           });
         
         
