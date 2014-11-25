@@ -1,0 +1,31 @@
+extends container
+block container
+
+  #hosts
+  
+  //- TODO support more than filesys.free
+  pre#list
+    
+  script(type='text/javascript').
+        
+    d3.json("/event?expression=filesys(*)&limit=10", function(json) {
+    
+      var groups = d3.nest()
+                     .key(function(d) { return d.data.free.host; })
+                     .entries(json);
+    
+      d3.select('#list').text(JSON.stringify(groups,false,' '));
+      
+      var h = d3.select('#hosts');
+      
+      var p = h.selectAll("p")
+                .data(groups);
+
+      p.enter()
+        .append("span")
+          .attr('class','glyphicon glyphicon-hdd')
+          .append('span')
+            .text(function(d) { return d.key; });
+      
+      
+    });
