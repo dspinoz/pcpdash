@@ -31,7 +31,8 @@ var pcpdash_pages = [ //{title: 'Index', href:'/index'},
 					  {title: 'Events', href:'/eventtypes'}, 
 					  {title: 'Heat Map', href:'/heatmap'},
 					  {title: 'Bar Chart', href:'/bar'},
-					  {title: 'Rainbow', href:'/arcs'} ];
+					  {title: 'Rainbow', href:'/arcs'},
+					  {title: 'File Systems', href:'/filesys'} ];
     
 var cubeHost = 'localhost',
     cubePort = 1081;
@@ -100,6 +101,10 @@ app.get('/heatmap', function(req,res) {
 	res.render('heatmap', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
 });
 
+app.get('/filesys', function(req,res) {
+	res.render('filesys', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+});
+
     
 // static files  =======================================================
 
@@ -145,6 +150,9 @@ app.get('/queue.js', function(req, res) {
 
 console.log(colors.info('Launching pmmgr'));
 
+// TODO check pmlogger.log files for errors
+// TODO check pmlogger.log files for full list of available metrics 
+//      within the PMNS(4)
 var pmmgr = spawn('./run', [], {cwd: './config/pmmgr'});
 
 pmmgr.on('close', function(code) {
@@ -236,8 +244,8 @@ app.get('/pcpdash/metric', function(req,res) {
 	var q = queue();
 
 	var ctx = {
-    metric: req.query.q,
-	  host: !req.query.h ? '.*' : req.query.h
+		metric: req.query.q,
+		host: !req.query.h ? '.*' : req.query.h
 	};
 
 	q.defer(pcpdash.getHosts, ctx);
