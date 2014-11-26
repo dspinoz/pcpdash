@@ -15,6 +15,9 @@ var port = process.env.PORT || 8080; // set our port
 //TODO configurable contexts to fetch and submit
 //TODO configurable host
 //TODO configurable metrics
+//TODO dont use the web api - rather :
+//  pminfo -a <archive> : list available metrics from an archive
+//  pmdumptext -a <archive> -d , -S '<starttime>' -M <metrics> : dump metrics from an archive in csv format with columns
 var ctxs = [{
   h: ".*", 
   q: "filesys.free" 
@@ -40,6 +43,7 @@ var client = cube.emitter("ws://localhost:1080"); //TODO specify cube host/port
     
 function getMetrics(ctx, callback) {
   
+  // TODO maintain latest snapshot for easy querying of current state
   var events = [];
   
   //TODO request to pmwebd not local server

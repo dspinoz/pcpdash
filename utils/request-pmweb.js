@@ -1,5 +1,6 @@
 // Make requests to pmwebd 
 // TODO modify server.js to query this file
+// TODO make api reusable for a sigle context - allow apps to mange individual contexts
 
 var request = require('request');
 var queue   = require('queue-async');
@@ -11,7 +12,13 @@ exports.contexts = {}; // global mapping for PMWEBAPI contexts
                                          
 exports.getContext = function(archive, callback) {
   
+  console.log('getContext', archive);
+  
+  //TODO track context and time
+  //TODO private API to allow pcp2cube to easily get the latest available set of metrics
+  //TODO does not allow multiple pcp metrics to be queried from the same context
   if (exports.contexts[archive.file]) {
+    
     archive.context = exports.contexts[archive.file];
     callback(null,archive);
     return;
