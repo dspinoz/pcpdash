@@ -5,22 +5,13 @@
 // modules =============================================================
 var express = require('express');
 var request = require('request');
-var fs      = require('fs');
-var path    = require('path');
 var app     = express();
-var fswalk  = require('./utils/fswalk');
-var pmweb   = require('./utils/request-pmweb');
-var pcpdash = require('./utils/request-pcpdash');
 var spawn   = require('child_process').spawn;
-var queue   = require('queue-async'); //TODO create rpm
 var colors  = require('colors');
 
 // configuration =======================================================
   
-var config_cube = require('./config/cube-evaluator');
-var config_pmwebd = require('./config/pmwebd');
-var config_pmmgr = require('./config/pmmgr');
-
+var pcpdash = require('./app/pcpdash');
 var config = require('./config/pcpdash');
     
 app.configure(function() {
@@ -57,80 +48,9 @@ colors.setTheme({
   cube_evaluator: 'cyan'
 });
     
-// jade-templated files  ====================================================
+// routes ==============================================================
 
-app.get('/index', function(req,res) {
-	res.render('index', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/test', function(req,res) {
-	res.render('test', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/fetch', function(req,res) {
-	res.render('fetch', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/bar', function(req,res) {
-	res.render('bar', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/arcs', function(req,res) {
-	res.render('arcs', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/eventtypes', function(req,res) {
-	res.render('eventtypes', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/heatmap', function(req,res) {
-	res.render('heatmap', {title: config.title, current: req.path, pages: config.pages});
-});
-
-app.get('/filesys', function(req,res) {
-	res.render('filesys', {title: config.title, current: req.path, pages: config.pages});
-});
-
-    
-// static files  =======================================================
-
-// TODO load minified in production environment
-
-app.get('/jquery.js', function(req,res) {
-  res.sendfile('bower_components/jquery/dist/jquery.js');
-});
-
-app.get('/bootstrap.js', function(req,res) {
-  res.sendfile('bower_components/bootstrap/dist/js/bootstrap.js');
-});
-
-app.get('/bootstrap.css', function(req,res) {
-  res.sendfile('bower_components/bootstrap/dist/css/bootstrap.css');
-});
-
-app.get('/bootstrap.css.map', function(req,res) {
-  res.sendfile('bower_components/bootstrap/dist/css/bootstrap.css.map');
-});
-
-app.get('/fonts/glyphicons-halflings-regular.svg', function(req,res) {
-  res.sendfile('bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.svg');
-});
-
-app.get('/fonts/glyphicons-halflings-regular.ttf', function(req,res) {
-  res.sendfile('bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf');
-});
-
-app.get('/fonts/glyphicons-halflings-regular.woff', function(req,res) {
-  res.sendfile('bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.woff');
-});
-
-app.get('/d3.js', function(req, res) {
-  res.sendfile('bower_components/d3/d3.js')
-});
-
-app.get('/queue.js', function(req, res) {
-  res.sendfile('bower_components/queue-async/queue.js')
-});
+pcpdash(app);
 
 // pcp services ========================================================
 
@@ -210,161 +130,6 @@ cube_evaluator.stdout.on('data', function(d) {
 // pcpdash services ====================================================
 
 // TODO launch pcp2cube.js
-
-// pcpdash =============================================================
-// Provides dashboard-specific requests 
-// Often utilities in order to provide some extra metadata for 
-// generating queries, etc
-
-// TODO api to see which metrics are available
-// TODO private API for dash utilities
-
-app.get('/pcpdash/metric', function(req,res) {
-
-	// Easily request the values of particular metrics
-	// Optionally provide a host, by default will do all hosts
-	
-	if (!req.query.q) {
-		res.send('Invalid query');
-		return;
-	}
-	
-	var q = queue();
-
-	var ctx = {
-		metric: req.query.q,
-		host: !req.query.h ? '.*' : req.query.h
-	};
-
-	q.defer(pcpdash.getHosts, ctx);
-
-	q.await(function(err, hosts) {
-	  
-    if (err) {
-      //TODO better error handling?
-      res.send(err);
-      console.log(colors.error(err));
-      return;
-    }
-    
-	  //console.log('hosts', hosts);
-
-    q = queue();
-    
-    q.defer(pcpdash.getArchives, hosts);
-    
-    q.await(function (err, archives) {
-        
-      if (err) {
-        //TODO better error handling?
-        res.send(err);
-        return;
-      }
-      
-      //console.log('archives', archives);
-      
-      q = queue();
-      
-      q.defer(pmweb.getContexts, archives);
-      
-      q.await(function(err, contexts) {
-        //console.log('contexts', contexts);
-        
-        q = queue();
-        
-        q.defer(pmweb.getMetrics, {metric: ctx.metric, archives: archives});
-        
-        q.await(function(err, metrics) {
-          //console.log('metrics', metrics);
-          res.send(metrics);
-        });
-      });
-    });
-  });
-});
-
-
-app.get('/pcpdash/hosts', function(req,res) {
-  // TODO move to pcpdash file
-  // TODO catch errors when reading file
-  var data = fs.readFileSync(config_pmmgr.config+ '/target-host', {encoding: 'ascii'});
-  var arr = data.split(/\n/g);
-  arr = arr.filter(function(i) {
-    return i != '';
-  });
-  
-  res.send(JSON.stringify({hosts: arr}));
-});
-
-// Provide a list of archives in order to create PMWEBAPI contexts
-app.get('/pcpdash/archives', function(req,res) {
-  fswalk.walkSync(config_pmmgr.archives, function(err, files) {
-    if (err) {
-      res.send(err);
-      return;
-    }
-    
-    var hostData = {};
-    var hosts = [];
-    
-    var regexMeta = /(.*)\/(.*)\/(.*?)(\.meta)$/g;
-    
-    files.forEach(function(f) {
-      var match = regexMeta.exec(f);
-      if (match) {
-          var h = {name: match[2], 
-                   archive: {name: match[3], path: match[2]+'/'+match[3]+match[4]}
-                  };
-                   
-          var st = fs.statSync(f);
-          
-          h.date = st.mtime;
-			
-		if (hostData[h.name] == undefined) {
-			hostData[h.name] = [];
-			hosts.push(h.name);
-		}
-		
-		hostData[h.name].push({name: h.archive.path, date: h.date});
-      }
-    });
-    
-    hosts.forEach(function(h) {
-		// sorted from newest to oldest
-		hostData[h].sort(function(a,b) {
-			return b.date.valueOf() - a.date.valueOf();
-		});
-	});
-    
-    res.send(JSON.stringify({"archives": hostData}));
-  });
-});
-
-// pcp webapi ==========================================================
-
-// TODO authentication 
-// TODO provide "easy" API for browser code to get metrics from archive
-// TODO remove security violation in config/pmwebd/run
-//      manage the available archives/hosts/metrics
-
-app.get('/pmapi/*', function(req,res) {
-  // TODO log proxy requests to cube
-  req.pipe(request('http://' +config_pmwebd.host +':'+ config_pmwebd.port + req.originalUrl)).pipe(res);
-});
-
-// cube webapi ===========================================
-    
-app.get('/types', function(req,res) {
-  req.pipe(request('http://' +config_cube.host +':'+ config_cube.port+ '/1.0' + req.originalUrl)).pipe(res);
-});
-
-app.get('/metric', function(req,res) {
-  req.pipe(request('http://' +config_cube.host +':'+ config_cube.port+ '/1.0' + req.originalUrl)).pipe(res);
-});
-
-app.get('/event', function(req,res) {
-  req.pipe(request('http://' +config_cube.host +':'+ config_cube.port+ '/1.0' + req.originalUrl)).pipe(res);
-});
 
 // start app ===========================================================
 

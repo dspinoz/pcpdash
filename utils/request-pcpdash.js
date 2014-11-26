@@ -1,12 +1,11 @@
 // Make requests to self
 
 var request = require('request');
-
-exports.port = process.env.PORT || 8080; // set our port
+var config = require('../config/pcpdash');
 
 exports.getHosts = function getHosts(info, callback) {
         
-  request({url: 'http://localhost:'+exports.port+'/pcpdash/hosts', json: true}, function(err,resp,json) {
+  request({url: 'http://localhost:'+config.port+'/pcpdash/hosts', json: true}, function(err,resp,json) {
     
     // TODO error handling
     
@@ -25,7 +24,7 @@ exports.getHosts = function getHosts(info, callback) {
 };
 
 exports.getArchives = function(hosts, callback) {
-  request({url: 'http://localhost:'+exports.port+'/pcpdash/archives', json: true}, function(err,resp,json) {
+  request({url: 'http://localhost:'+config.port+'/pcpdash/archives', json: true}, function(err,resp,json) {
     
     var archives = [];
     
