@@ -65,10 +65,10 @@ colors.setTheme({
   debug: 'blue',
   error: 'red',
   
-  pmmgr: 'white',
-  pmwebd: 'white',
-  cube_collector: 'white',
-  cube_evaluator: 'white'
+  pmmgr: 'magenta',
+  pmwebd: 'red',
+  cube_collector: 'blue',
+  cube_evaluator: 'cyan'
 });
     
 // jade-templated files  ====================================================
