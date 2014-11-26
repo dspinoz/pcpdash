@@ -17,25 +17,11 @@ var colors  = require('colors');
 
 // configuration =======================================================
   
-var port = process.env.PORT || 8080; // set our port
+var config_cube = require('./config/cube-evaluator');
+var config_pmwebd = require('./config/pmwebd');
+var config_pmmgr = require('./config/pmmgr');
 
-var pcpHost = process.env.PCPHOST || 'localhost', 
-    pcpPort = process.env.PCPPORT || 44324; // custom pcp web service
-    
-var archiveDir = process.env.ARCHIVE_DIR || 'logs/pmmgr',
-    configDir  = process.env.PMMGR_CONFIG_DIR || 'config/pmmgr';
-    
-var pcpdash_pages = [ //{title: 'Index', href:'/index'}, 
-					  //{title: 'Testing', href:'/test'},
-					  //{title: 'Fetch', href:'/fetch'}, 
-					  {title: 'Events', href:'/eventtypes'}, 
-					  {title: 'Heat Map', href:'/heatmap'},
-					  {title: 'Bar Chart', href:'/bar'},
-					  {title: 'Rainbow', href:'/arcs'},
-					  {title: 'File Systems', href:'/filesys'} ];
-    
-var cubeHost = 'localhost',
-    cubePort = 1081;
+var config = require('./config/pcpdash');
     
 app.configure(function() {
   
@@ -74,35 +60,35 @@ colors.setTheme({
 // jade-templated files  ====================================================
 
 app.get('/index', function(req,res) {
-	res.render('index', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('index', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/test', function(req,res) {
-	res.render('test', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('test', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/fetch', function(req,res) {
-	res.render('fetch', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('fetch', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/bar', function(req,res) {
-	res.render('bar', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('bar', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/arcs', function(req,res) {
-	res.render('arcs', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('arcs', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/eventtypes', function(req,res) {
-	res.render('eventtypes', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('eventtypes', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/heatmap', function(req,res) {
-	res.render('heatmap', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('heatmap', {title: config.title, current: req.path, pages: config.pages});
 });
 
 app.get('/filesys', function(req,res) {
-	res.render('filesys', {title: 'PCPDash', current: req.path, pages: pcpdash_pages});
+	res.render('filesys', {title: config.title, current: req.path, pages: config.pages});
 });
 
     
@@ -189,6 +175,7 @@ pmwebd.stdout.on('data', function(d) {
 
 //TODO use the cube library and instantiate here
 
+//TODO specify collector port, see config
 var cube_collector = spawn('/usr/bin/cube-collector');
 
 cube_collector.on('close', function(code) {
@@ -204,6 +191,7 @@ cube_collector.stdout.on('data', function(d) {
 	console.log(colors.cube_collector(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
 });
 
+//TODO specify evaluator port, see config
 var cube_evaluator = spawn('/usr/bin/cube-evaluator');
 
 cube_evaluator.on('close', function(code) {
@@ -299,7 +287,7 @@ app.get('/pcpdash/metric', function(req,res) {
 app.get('/pcpdash/hosts', function(req,res) {
   // TODO move to pcpdash file
   // TODO catch errors when reading file
-  var data = fs.readFileSync(configDir+ '/target-host', {encoding: 'ascii'});
+  var data = fs.readFileSync(config_pmmgr.config+ '/target-host', {encoding: 'ascii'});
   var arr = data.split(/\n/g);
   arr = arr.filter(function(i) {
     return i != '';
@@ -310,7 +298,7 @@ app.get('/pcpdash/hosts', function(req,res) {
 
 // Provide a list of archives in order to create PMWEBAPI contexts
 app.get('/pcpdash/archives', function(req,res) {
-  fswalk.walkSync(archiveDir, function(err, files) {
+  fswalk.walkSync(config_pmmgr.archives, function(err, files) {
     if (err) {
       res.send(err);
       return;
@@ -361,30 +349,30 @@ app.get('/pcpdash/archives', function(req,res) {
 
 app.get('/pmapi/*', function(req,res) {
   // TODO log proxy requests to cube
-  req.pipe(request('http://' +pcpHost +':'+ pcpPort + req.originalUrl)).pipe(res);
+  req.pipe(request('http://' +config_pmwebd.host +':'+ config_pmwebd.port + req.originalUrl)).pipe(res);
 });
 
 // cube webapi ===========================================
     
 app.get('/types', function(req,res) {
-  req.pipe(request('http://' +cubeHost +':'+ cubePort+ '/1.0' + req.originalUrl)).pipe(res);
+  req.pipe(request('http://' +config_cube.host +':'+ config_cube.port+ '/1.0' + req.originalUrl)).pipe(res);
 });
 
 app.get('/metric', function(req,res) {
-  req.pipe(request('http://' +cubeHost +':'+ cubePort+ '/1.0' + req.originalUrl)).pipe(res);
+  req.pipe(request('http://' +config_cube.host +':'+ config_cube.port+ '/1.0' + req.originalUrl)).pipe(res);
 });
 
 app.get('/event', function(req,res) {
-  req.pipe(request('http://' +cubeHost +':'+ cubePort+ '/1.0' + req.originalUrl)).pipe(res);
+  req.pipe(request('http://' +config_cube.host +':'+ config_cube.port+ '/1.0' + req.originalUrl)).pipe(res);
 });
 
 // start app ===========================================================
 
-app.listen(port, function() { // startup our app at http://localhost:port
+app.listen(config.port, function() { // startup our app at http://localhost:port
   console.log(colors.debug("listening..."));
 });
 
-console.log(colors.info('Magic happens on port ' + port)); // shoutout to the user
+console.log(colors.info('Magic happens on port ' + config.port)); // shoutout to the user
 exports = module.exports = app; 						   // expose app
 
 // signal handling =====================================================
