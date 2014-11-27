@@ -13,7 +13,10 @@ var colors  = require('colors');
   
 var pcpdash = require('./app/pcpdash');
 var config = require('./config/pcpdash');
+var config_colors = require('./config/colors');
     
+config_colors(colors);
+
 app.configure(function() {
   
   // the order of app middleware is important - invoked sequentially!
@@ -30,23 +33,6 @@ app.configure(function() {
   app.set('views', __dirname + '/views');
 });
 
-colors.setTheme({
-  silly: 'rainbow',
-  input: 'grey',
-  verbose: 'cyan',
-  prompt: 'grey',
-  info: 'green',
-  data: 'grey',
-  help: 'cyan',
-  warn: 'yellow',
-  debug: 'blue',
-  error: 'red',
-  
-  pmmgr: 'magenta',
-  pmwebd: 'red',
-  cube_collector: 'blue',
-  cube_evaluator: 'cyan'
-});
     
 // routes ==============================================================
 
