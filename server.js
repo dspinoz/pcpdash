@@ -6,7 +6,6 @@
 var express = require('express');
 var request = require('request');
 var app     = express();
-var spawn   = require('child_process').spawn;
 var colors  = require('colors');
 
 // configuration =======================================================
@@ -38,80 +37,17 @@ app.configure(function() {
 
 pcpdash(app);
 
-// pcp services ========================================================
+// services ========================================================
 
-console.log(colors.info('Launching pmmgr'));
+var pmmgr = require('./spawn/pmmgr');
+var pmwebd = require('./spawn/pmwebd');
+var cube_collector = require('./spawn/cube-collector');
+var cube_evaluator = require('./spawn/cube-evaluator');
 
-// TODO check pmlogger.log files for errors
-// TODO check pmlogger.log files for full list of available metrics 
-//      within the PMNS(4)
-var pmmgr = spawn('./run', [], {cwd: './config/pmmgr'});
-
-pmmgr.on('close', function(code) {
-	console.log(colors.info("pmmgr exited " + code));
-	process.kill(process.pid, 'SIGINT'); //kill self
-});
-
-pmmgr.stderr.on('data', function(d) {
-	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-pmmgr.stdout.on('data', function(d) {
-	console.log(colors.pmmgr(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-console.log(colors.info('Launching pmwebd'));
-
-var pmwebd = spawn('./run', [], {cwd: './config/pmwebd'});
-
-pmwebd.on('close', function(code) {
-	console.log(colors.info("pmwebd exited " + code));
-	process.kill(process.pid, 'SIGINT'); //kill self
-});
-
-pmwebd.stderr.on('data', function(d) {
-	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-pmwebd.stdout.on('data', function(d) {
-	console.log(colors.pmwebd(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-// cube services =======================================================
-
-//TODO use the cube library and instantiate here
-
-//TODO specify collector port, see config
-var cube_collector = spawn('/usr/bin/cube-collector');
-
-cube_collector.on('close', function(code) {
-	console.log(colors.info("cube-collector exited " + code));
-	process.kill(process.pid, 'SIGINT'); //kill self
-});
-
-cube_collector.stderr.on('data', function(d) {
-	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-cube_collector.stdout.on('data', function(d) {
-	console.log(colors.cube_collector(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-//TODO specify evaluator port, see config
-var cube_evaluator = spawn('/usr/bin/cube-evaluator');
-
-cube_evaluator.on('close', function(code) {
-	console.log(colors.info("cube-collector exited " + code));
-	process.kill(process.pid, 'SIGINT'); //kill self
-});
-
-cube_evaluator.stderr.on('data', function(d) {
-	console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
-
-cube_evaluator.stdout.on('data', function(d) {
-	console.log(colors.cube_evaluator(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
-});
+pmmgr.launch();
+pmwebd.launch();
+cube_collector.launch();
+cube_evaluator.launch();
 
 // pcpdash services ====================================================
 
@@ -130,8 +66,10 @@ exports = module.exports = app; 						   // expose app
 
 process.on('SIGINT', function() {
 
-  pmmgr.kill("SIGINT");
-  pmwebd.kill("SIGINT");
+  pmmgr.kill();
+  pmwebd.kill();
+  cube_collector.kill();
+  cube_evaluator.kill();
 
   //TODO make sure all the services have stopped 
   process.exit(0);
