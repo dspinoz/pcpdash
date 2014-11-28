@@ -11,12 +11,14 @@ var request_pcpdash = require('../utils/request-pcpdash');
 var bower_resources = require('./bower_resources');
 var cube = require('./cube');
 var pmwebd = require('./pmwebd');
+var apiv1 = require('./apiv1');
 
 module.exports = function(app) {
 
   bower_resources(app);
   cube(app);
   pmwebd(app);
+  apiv1(app);
 
   // jade-templated pages ==============================================
   // for client-side rendering
