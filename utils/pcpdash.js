@@ -37,6 +37,8 @@ module.exports.archives = function(callback) {
           name: match[2], 
           archive: {name: match[3], path: match[2]+'/'+match[3]+match[4]}
         };
+        
+        // TODO use pmdumplog -l to show archive information
 
         var st = fs.statSync(f);
         h.date = st.mtime;
