@@ -1,10 +1,8 @@
-var fs      = require('fs');
 var queue   = require('queue-async'); //TODO create rpm
 
 var config = require('../config/pcpdash');
-var config_pmmgr = require('../config/pmmgr');
 
-var fswalk  = require('../utils/fswalk');
+var utils   = require('../utils/pcpdash');
 var pmweb   = require('../utils/request-pmweb');
 var request_pcpdash = require('../utils/request-pcpdash');
 
@@ -129,58 +127,13 @@ module.exports = function(app) {
 
 
   app.get('/pcpdash/hosts', function(req,res) {
-    // TODO move to pcpdash file
-    // TODO catch errors when reading file
-    var data = fs.readFileSync(config_pmmgr.config+ '/target-host', {encoding: 'ascii'});
-    var arr = data.split(/\n/g);
-    arr = arr.filter(function(i) {
-      return i != '';
-    });
-    
+    var arr = utils.hosts();
     res.send(JSON.stringify({hosts: arr}));
   });
 
-  // Provide a list of archives in order to create PMWEBAPI contexts
   app.get('/pcpdash/archives', function(req,res) {
-    fswalk.walkSync(config_pmmgr.archives, function(err, files) {
-      if (err) {
-        res.send(err);
-        return;
-      }
-      
-      var hostData = {};
-      var hosts = [];
-      
-      var regexMeta = /(.*)\/(.*)\/(.*?)(\.meta)$/g;
-      
-      files.forEach(function(f) {
-        var match = regexMeta.exec(f);
-        if (match) {
-            var h = {name: match[2], 
-                     archive: {name: match[3], path: match[2]+'/'+match[3]+match[4]}
-                    };
-                     
-            var st = fs.statSync(f);
-            
-            h.date = st.mtime;
-        
-      if (hostData[h.name] == undefined) {
-        hostData[h.name] = [];
-        hosts.push(h.name);
-      }
-      
-      hostData[h.name].push({name: h.archive.path, date: h.date});
-        }
-      });
-      
-      hosts.forEach(function(h) {
-      // sorted from newest to oldest
-      hostData[h].sort(function(a,b) {
-        return b.date.valueOf() - a.date.valueOf();
-      });
-    });
-      
-      res.send(JSON.stringify({"archives": hostData}));
+    utils.archives(function(err,arr) {
+      res.send(JSON.stringify({archives: arr}));  
     });
   });
 
