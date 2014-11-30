@@ -1,3 +1,5 @@
+var spawn = require('child_process').spawn;
+
 var utils = require('../utils/pcpdash');
 
 var root = '/api/v1';
@@ -33,6 +35,74 @@ module.exports = function(app) {
       }
       
       res.send(JSON.stringify({archives: arr}));
+    });
+  });
+  
+  app.get(root+'/metrics/:host', function(req,res) {
+    utils.metrics(req.params.host, null, null, function(err,data) {
+      if (err) {
+        res.status(err.code);
+        res.send(err);
+        return;
+      }
+      
+      res.send(JSON.stringify({metrics: data}));
+    });
+  });
+  
+  app.get(root+'/metrics/:host/:archive', function(req,res) {
+    utils.metrics(req.params.host, req.params.archive, null, function(err,data) {
+      if (err) {
+        res.status(err.code);
+        res.send(err);
+        return;
+      }
+      
+      res.send(JSON.stringify({metrics: data}));
+    });
+  });
+  
+  app.get(root+'/metrics/:host/:archive/:metric', function(req,res) {
+    utils.metrics(req.params.host, req.params.archive, req.params.metric, function(err,data) {
+      if (err) {
+        res.status(err.code);
+        res.send(err);
+        return;
+      }
+      
+      res.send(JSON.stringify({metrics: data}));
+    });
+  });
+  
+  // TODO allow specifying instance. careful with instances that contain slashes - eg. filesys.free["/dev/sda1"]
+  
+  app.get(root+'/values/:host/:metric', function(req,res) {
+    
+    utils.values(req.params.host, null, req.params.metric, function(err,data) {
+      if (err) {
+        res.status(err.code);
+        res.send(err);
+        return;
+      }
+      
+      res.send(data);
+    });
+  });
+  
+  // TODO allow specifying instance. careful with instances that contain slashes - eg. filesys.free["/dev/sda1"]
+  
+  app.get(root+'/values/:host/:archive/:metric', function(req,res) {
+    
+    console.log(req.params, req.query);
+    
+    utils.values(req.params.host, req.params.archive, req.params.metric, function(err,data) {
+      if (err) {
+        res.status(err.code);
+        res.send(err);
+        return;
+      }
+      
+      res.send(data);
     });
   });
 
