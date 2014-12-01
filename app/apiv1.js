@@ -38,6 +38,8 @@ module.exports = function(app) {
     });
   });
   
+  //TODO /metrics/:host/:metric (auto get latest archive)
+  
   app.get(root+'/metrics/:host', function(req,res) {
     utils.metrics(req.params.host, null, null, function(err,data) {
       if (err) {
@@ -105,5 +107,7 @@ module.exports = function(app) {
       res.send(data);
     });
   });
+  
+  //TODO allow /values/:metric - get metrics for all hosts
 
 };
