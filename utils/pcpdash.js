@@ -94,87 +94,8 @@ module.exports.archives = function(callback) {
   });
 };
 
-module.exports.metrics = function(host,archive,metric,callback) {
+function priv_get_metrics(host,archive,metric,callback) {
   
-  if (!archive) {
-    // determine latest available archive for the host
-    
-    var arch = null;
-    
-    module.exports.archives(function(err,archives) {
-      archives.forEach(function(a) {
-        if (a.host == host) {
-          if (!arch) {
-            arch = a;
-            arch.end_d = new Date(arch.end);
-          }
-          else
-          {
-            a.end_d = new Date(a.end);
-            
-            if (arch.end_d.valueOf() < a.end_d.valueOf()) {
-              arch = a;
-            }
-          }
-        }
-      });
-      
-      if (!arch) {
-        callback({message: "No archive available", code: 304},null);
-        return;
-      }
-      
-      archive = arch.name;
-      
-      //TODO reuse code
-                var path = config_pmmgr.archives + '/' + host + '/' + archive + '.meta';
-                
-                try {
-                  // verify exists, throws Error
-                  var st = fs.statSync(path);
-                  
-                  var out = '';
-                  
-                  var args = ['-a', path];
-                  
-                  if (metric) {
-                    args.push(metric);
-                  }
-                  
-                  var pminfo = spawn('pminfo', args);
-                  
-                  pminfo.stdout.on('data', function(data) {
-                    out += data;
-                  });
-                  
-                  pminfo.stderr.on('data', function(data) {
-                    console.log('PMINFO: ' + data);
-                  });
-                  
-                  pminfo.on('close', function(code) {
-                    if (code != 0) {
-                      callback({error: 'error running pminfo', code: code}, null);
-                      return;
-                    }
-                    
-                    var lines = out.split(/\n/g);
-                    
-                    lines = lines.filter(function(i) {
-                      return i != '';
-                    });
-                    
-                    callback(null,lines);
-                  });
-                  
-                } catch (Error) {
-                  callback({code:404, message:Error},null);
-                }
-      });
-      
-    return;
-  }
-
-//TODO reuse above
   var path = config_pmmgr.archives + '/' + host + '/' + archive + '.meta';
   
   try {
@@ -217,7 +138,84 @@ module.exports.metrics = function(host,archive,metric,callback) {
   } catch (Error) {
     callback({code:404, message:Error},null);
   }
+};
 
+module.exports.metrics = function(host,archive,metric,callback) {
+  
+  if (!archive) {
+    // determine latest available archive for the host
+    
+    var arch = null;
+    
+    module.exports.archives(function(err,archives) {
+      archives.forEach(function(a) {
+        if (a.host == host) {
+          if (!arch) {
+            arch = a;
+            arch.end_d = new Date(arch.end);
+          }
+          else
+          {
+            a.end_d = new Date(a.end);
+            
+            if (arch.end_d.valueOf() < a.end_d.valueOf()) {
+              arch = a;
+            }
+          }
+        }
+      });
+      
+      if (!arch) {
+        callback({message: "No archive available", code: 304},null);
+        return;
+      }
+      
+      archive = arch.name;
+      
+      //TODO reuse code
+      priv_get_metrics(host,archive,metric,callback);
+    });
+      
+    return;
+  }
+
+  priv_get_metrics(host,archive,metric,callback);
+};
+
+function priv_get_values(host,archive,metric,callback) {
+  
+  var path = config_pmmgr.archives + '/' + host + '/' + archive + '.meta';
+  
+  try {
+    // verify exists, throws Error
+    var st = fs.statSync(path);
+    
+    var out = '';
+    
+    var pmdumptext = spawn('pmdumptext', ['-H', '-d', ',', '-a', path, metric]);
+    
+    pmdumptext.stdout.on('data', function(data) {
+      out += data;
+    });
+    
+    pmdumptext.stderr.on('data', function(data) {
+      console.log('PMDUMPTEXT: ' + data);
+    });
+    
+    pmdumptext.on('close', function(code) {
+      if (code != 0) {
+        callback({error: 'error running pmdumptext', code: code}, null);
+        return;
+      }
+      
+      //TODO just get the latest value from the archive
+      
+      callback(null,out);
+    });
+    
+  } catch (Error) {
+    callback({code:404, message:Error},null);
+  }
 };
 
 module.exports.values = function(host,archive,metric,callback) {
@@ -252,82 +250,13 @@ module.exports.values = function(host,archive,metric,callback) {
       
       archive = arch.name;
       
-      
-      
-                  //TODO reuse code below
-  
-                  var path = config_pmmgr.archives + '/' + host + '/' + archive + '.meta';
-                  
-                  try {
-                    // verify exists, throws Error
-                    var st = fs.statSync(path);
-                    
-                    var out = '';
-                    
-                    var pmdumptext = spawn('pmdumptext', ['-H', '-d', ',', '-a', path, metric]);
-                    
-                    pmdumptext.stdout.on('data', function(data) {
-                      out += data;
-                    });
-                    
-                    pmdumptext.stderr.on('data', function(data) {
-                      console.log('PMDUMPTEXT: ' + data);
-                    });
-                    
-                    pmdumptext.on('close', function(code) {
-                      if (code != 0) {
-                        callback({error: 'error running pmdumptext', code: code}, null);
-                        return;
-                      }
-                      
-                      //TODO just get the latest value from the archive
-                      
-                      callback(null,out);
-                    });
-                    
-                  } catch (Error) {
-                    callback({code:404, message:Error},null);
-                  }
-      
-      
-      
+      priv_get_values(host,archive,metric,callback);
     });
     
     return;
   }
   
-  // know the archive
-  
-  var path = config_pmmgr.archives + '/' + host + '/' + archive + '.meta';
-  
-  try {
-    // verify exists, throws Error
-    var st = fs.statSync(path);
-    
-    var out = '';
-    
-    var pmdumptext = spawn('pmdumptext', ['-H', '-d', ',', '-a', path, metric]);
-    
-    pmdumptext.stdout.on('data', function(data) {
-      out += data;
-    });
-    
-    pmdumptext.stderr.on('data', function(data) {
-      console.log('PMDUMPTEXT: ' + data);
-    });
-    
-    pmdumptext.on('close', function(code) {
-      if (code != 0) {
-        callback({error: 'error running pmdumptext', code: code}, null);
-        return;
-      }
-      
-      callback(null,out);
-    });
-    
-  } catch (Error) {
-    callback({code:404, message:Error},null);
-  }
+  priv_get_values(host,archive,metric,callback);
 };
 
 // Provide a list of archives in order to create PMWEBAPI contexts
