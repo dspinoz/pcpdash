@@ -209,6 +209,11 @@ function priv_get_values(host,archive,metric,callback) {
       }
       
       //TODO just get the latest value from the archive
+      //TODO allow multiple metrics to get values from (not just sub-types)
+      //TODO parse the first line and remove archive path
+      //TODO show host name? show archive when pulled values from many
+      var reg = new RegExp(path+'/',"g");
+      out = out.replace(reg,''); 
       
       callback(null,out);
     });
@@ -217,6 +222,12 @@ function priv_get_values(host,archive,metric,callback) {
     callback({code:404, message:Error},null);
   }
 };
+
+// get the latest values for provided metric in CSV format
+//TODO api to get latest values
+// pmlogsummary -H -F logs/pmmgr/localhost.localdomain/archive-20141204.134329.meta filesys
+
+
 
 module.exports.values = function(host,archive,metric,callback) {
   

@@ -12,6 +12,7 @@ module.exports = {
     {title: 'Heat Map', href:'/heatmap'},
     {title: 'Bar Chart', href:'/bar'},
     {title: 'Rainbow', href:'/arcs'},
-    {title: 'File Systems', href:'/filesys'} 
+    {title: 'File Systems', href:'/filesys'},
+    {title: 'New', href:'/new'} 
   ]
 }
