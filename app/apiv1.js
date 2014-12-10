@@ -78,6 +78,20 @@ module.exports = function(app) {
   
   // TODO allow specifying instance. careful with instances that contain slashes - eg. filesys.free["/dev/sda1"]
   
+  
+  app.get(root+'/summary/:host/:metric', function(req,res) {
+    
+    utils.summary(req.params.host, null, req.params.metric, function(err,data) {
+      if (err) {
+        res.status(err.code);
+        res.send(err);
+        return;
+      }
+      
+      res.send(data);
+    });
+  });
+
   app.get(root+'/values/:host/:metric', function(req,res) {
     
     utils.values(req.params.host, null, req.params.metric, function(err,data) {

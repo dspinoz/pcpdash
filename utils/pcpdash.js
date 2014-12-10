@@ -224,11 +224,93 @@ function priv_get_values(host,archive,metric,callback) {
 };
 
 // get the latest values for provided metric in CSV format
+function priv_get_summary(host,archive,metric,callback) {
+  
+  var path = config_pmmgr.archives + '/' + host + '/' + archive + '.meta';
+  
+  try {
+    // verify exists, throws Error
+    var st = fs.statSync(path);
+    
+    var out = '';
+    
+    var pmlogsummary = spawn('pmlogsummary', ['-H', '-F', '-S', '-60sec', path, metric]);
+    
+    pmlogsummary.stdout.on('data', function(data) {
+      out += data;
+    });
+    
+    pmlogsummary.stderr.on('data', function(data) {
+      console.log('PMLOGSUMMARY: ' + data);
+    });
+    
+    pmlogsummary.on('close', function(code) {
+      if (code != 0) {
+        callback({error: 'error running pmlogsummary', code: code}, null);
+        return;
+      }
+      
+      //TODO just get the latest value from the archive
+      //TODO allow multiple metrics to get values from (not just sub-types)
+      //TODO parse the first line and remove archive path
+      //TODO show host name? show archive when pulled values from many
+      var reg = new RegExp(path+'/',"g");
+      out = out.replace(reg,''); 
+      
+      callback(null,out);
+    });
+    
+  } catch (Error) {
+    callback({code:404, message:Error},null);
+  }
+};
+
+// get the latest values for provided metric in CSV format
 //TODO api to get latest values
 // pmlogsummary -H -F logs/pmmgr/localhost.localdomain/archive-20141204.134329.meta filesys
 
+module.exports.summary = function(host,archive,metric,callback) {
+  
+  if (!archive) {
+    // determine latest available archive for the host
+    
+    var arch = null;
+    
+    module.exports.archives(function(err,archives) {
+      archives.forEach(function(a) {
+        if (a.host == host) {
+          if (!arch) {
+            arch = a;
+            arch.end_d = new Date(arch.end);
+          }
+          else
+          {
+            a.end_d = new Date(a.end);
+            
+            if (arch.end_d.valueOf() < a.end_d.valueOf()) {
+              arch = a;
+            }
+          }
+        }
+      });
+      
+      if (!arch) {
+        callback({message: "No archive available", code: 304},null);
+        return;
+      }
+      
+      archive = arch.name;
+      
+      priv_get_summary(host,archive,metric,callback);
+    });
+    
+    return;
+  }
+  
+  priv_get_summary(host,archive,metric,callback);
+};
 
-
+// Provide a list of archives in order to create PMWEBAPI contexts
 module.exports.values = function(host,archive,metric,callback) {
   
   if (!archive) {

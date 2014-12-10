@@ -24,6 +24,10 @@ module.exports = function(app) {
   app.get('/index', function(req,res) {
     res.render('index', {title: config.title, current: req.path, pages: config.pages});
   });
+  
+  app.get('/new', function(req,res) {
+    res.render('new', {title: config.title, current: req.path, pages: config.pages});
+  });
 
   app.get('/test', function(req,res) {
     res.render('test', {title: config.title, current: req.path, pages: config.pages});
