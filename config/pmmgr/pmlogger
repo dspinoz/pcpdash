@@ -1,1 +1,3 @@
--c pmloggerconfig
+-c pmloggerconfig -t 10 -u
+
+
