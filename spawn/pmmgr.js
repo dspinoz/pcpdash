@@ -10,6 +10,9 @@ module.exports.launch = function(app) {
   // TODO check pmlogger.log files for errors
   // TODO check pmlogger.log files for full list of available metrics 
   //      within the PMNS(4)
+  // TODO allow configuration to control additional settings for pmmgr
+  //      eg. allow user to override pmlogger interval (-t) and 
+  //      pmsummary window (-S)
   pmmgr = spawn('./run', [], {cwd: './config/pmmgr'});
 
   pmmgr.on('close', function(code) {
