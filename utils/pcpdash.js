@@ -234,7 +234,10 @@ function priv_get_summary(host,archive,metric,callback) {
     
     var out = '';
     
-    var pmlogsummary = spawn('pmlogsummary', ['-H', '-F', '-S', '-60sec', path, metric]);
+    // maintain a smaller window to give closer to real-time value
+    // pmloggers are run with specific interval - see config/pmmgr/pmlogger
+    // TODO configure pmlogsummary window
+    var pmlogsummary = spawn('pmlogsummary', ['-H', '-F', '-S', '-30sec', path, metric]);
     
     pmlogsummary.stdout.on('data', function(data) {
       out += data;
