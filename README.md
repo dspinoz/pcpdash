@@ -1,7 +1,7 @@
 pcpdash
 =======
 
-Web Dashboard for [Performance Co-Pilot (PCP)](http://www.performancecopilot.org/)
+Web Dashboard for [Performance Co-Pilot (PCP)](http://pcp.io/)
 
 Using some of the latest technologies, provide a web dashboard for the purposes of viewing a range of metrics managed by PCP and other tools. 
 
@@ -95,3 +95,5 @@ bower install
 ```bash
 ./server.js
 ```
+
+[http://localhost:8080](http://localhost:8080)
