@@ -3,24 +3,39 @@ pcpdash
 
 Web Dashboard for [Performance Co-Pilot (PCP)](http://www.performancecopilot.org/)
 
-Using some of the most common web technologies, provide a web dashboard
-for the purposes of viewing a range of metrics managed by PCP.
+Using some of the latest technologies, provide a web dashboard for the purposes of viewing a range of metrics managed by PCP and other tools. 
 
-Makes use of the following technologies:
+By integrating a range of tools, give system administrators and developers an extremly easy way to monitor a range of hosts, services and applications.
 
+Makes use of the following open source tools and technologies:
+
+* [pcp](http://www.pcp.io/)
 * [node](http://nodejs.org)
-* [bootstrap](http://getbootstrap.com)
 * [d3](http://d3js.org)
+* [bootstrap](http://getbootstrap.com)
 * [jquery](http://jquery.com)
+* [cube](http://square.github.io/cube/)
+* [statsd](https://github.com/etsy/statsd/) __TODO__
 
-## Getting Started
+## Contributing
+
+Contributions are most welcome! Feel free to address any of the __TODO__'s.
+
+## Documentation
+
+__TODO__
+
+* Services
+* Configuration
+* Web API
+* Dashboard
+
+## Getting Started with PCP
  
-**pcpdash requires a working web API!**
- 
-On RHEL systems, the following commands will get you started:
+On RHEL6 systems, the following commands will get you started with pcp:
 
 ```bash
-yum install pcp pcp-webapi pcp-manager
+yum install pcp pcp-webapi pcp-manager pcp-gui
 chkconfig pmcd on
 chkconfig pmwebd on
 service pmcd start
@@ -34,19 +49,30 @@ pmprobe
 pminfo
 ```
 
-Also consider installing the following packages for debugging utilities:
-```bash
-yum install pcp-gui
-```
-
-## Launch pcpdash
+## Getting started with pcpdash
 
 ```bash
 git clone http://github.com/dspinoz/pcpdash.git
 cd pcpdash
+```
+
+## Preparing back-end
+
+### Using npm
+
+```bash
 npm install
-bower install
-node server.js
+```
+
+### Using yum
+
+__TODO__ Create spec file, and build pcpdash rpm for easy installation with yum
+
+```bash
+git clone https://github.com/dspinoz/nodejs
+cd nodejs
+git checkout build
+yum install RPMS/noarch/nodejs-cube-0.2.12-3.el6.noarch.rpm RPMS/noarch/nodejs-queue-async-1.0.7-1.el7.noarch.rpm
 ```
 
 When using yum to manage node packages, ensure the following
@@ -55,3 +81,17 @@ When using yum to manage node packages, ensure the following
 export NODE_PATH=/usr/local/lib/node_modules:/usr/lib/node_modules
 ```
 
+## Preparing front-end
+
+__TODO__ Don't require the use of bower when using yum
+
+```bash
+npm -g install bower
+bower install
+```
+
+## Running pcpdash
+
+```bash
+./server.js
+```
