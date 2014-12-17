@@ -38,6 +38,7 @@ app.configure(function() {
 pcpdash(app);
 
 // services ========================================================
+// TODO launch statsd
 
 var pmmgr = require('./spawn/pmmgr');
 var pmwebd = require('./spawn/pmwebd');
@@ -52,6 +53,7 @@ cube_evaluator.launch();
 // pcpdash services ====================================================
 
 // TODO launch pcp2cube.js
+// TODO provide statsd2cube.js
 
 // start app ===========================================================
 

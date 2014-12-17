@@ -123,5 +123,7 @@ module.exports = function(app) {
   });
   
   //TODO allow /values/:metric - get metrics for all hosts
+  
+  //TODO statsd socket.io interface for streaming statsd packets
 
 };
