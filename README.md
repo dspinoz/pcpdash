@@ -72,7 +72,15 @@ __TODO__ Create spec file, and build pcpdash rpm for easy installation with yum
 git clone https://github.com/dspinoz/nodejs
 cd nodejs
 git checkout build
-yum install RPMS/noarch/nodejs-cube-0.2.12-3.el6.noarch.rpm RPMS/noarch/nodejs-queue-async-1.0.7-1.el7.noarch.rpm
+createrepo RPMS
+cat > local.repo <<EOF
+[local]
+name=local-nodejs
+baseurl=file://`pwd`/RPMS
+enabled=1
+gpgcheck=0
+EOF
+yum --config local.repo install nodejs-cube nodejs-queue-async mongodb-org nodejs-express nodejs-request nodejs-jade
 ```
 
 When using yum to manage node packages, ensure the following
