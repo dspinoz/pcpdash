@@ -1,36 +1,32 @@
 var colors = require('colors');
 var spawn  = require('child_process').spawn;
 
-var cube = undefined;
-  
+var statsd = null;
+
 module.exports.launch = function(app) {
   
-  //TODO use the cube library and instantiate here
-  //TODO specify collector port, see config
-  
-  var cube = spawn('/usr/bin/cube-collector'); //TODO use system or in node_modules
+  statsd = spawn('/usr/lib/node_modules/statsd/bin/statsd', ['config/statsd.js']);
 
-  cube.on('close', function(code) {
-    console.log(colors.info("cube-collector exited " + code));
+  statsd.on('close', function(code) {
+    console.log(colors.info("statsd exited " + code));
   });
 
-  cube.stderr.on('data', function(d) {
+  statsd.stderr.on('data', function(d) {
     console.log(colors.debug(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
   });
 
-  cube.stdout.on('data', function(d) {
-    console.log(colors.cube_collector(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
+  statsd.stdout.on('data', function(d) {
+    console.log(colors.statsd(d.toString().replace(/(\r\n|\n|\r)/gm,"")));
   });
   
-  cube.on('error', function(err) {
-    console.log(colors.error('CUBE COLLECTOR: ') + colors.error(err));
+  statsd.on('error', function(err) {
+    console.log(colors.error('STATSD: ') + colors.error(err));
   });
 
 };
 
 module.exports.kill = function(signal) {
-  if (cube) {
-    cube.kill(signal ? signal : "SIGINT");
+  if (statsd) {
+    statsd.kill(signal ? signal : "SIGINT");
   }
 };
-/usr/lib/node_modules/statsd/bin/statsd config/statsd.js

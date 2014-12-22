@@ -12,6 +12,7 @@ module.exports = function(colors) {
     debug: 'blue',
     error: 'red',
     
+    statsd: 'green',
     pmmgr: 'magenta',
     pmwebd: 'red',
     cube_collector: 'blue',

@@ -40,11 +40,13 @@ pcpdash(app);
 // services ========================================================
 // TODO launch statsd
 
+var statsd = require('./spawn/statsd');
 var pmmgr = require('./spawn/pmmgr');
 var pmwebd = require('./spawn/pmwebd');
 var cube_collector = require('./spawn/cube-collector');
 var cube_evaluator = require('./spawn/cube-evaluator');
 
+statsd.launch();
 pmmgr.launch();
 pmwebd.launch();
 cube_collector.launch();
@@ -68,6 +70,7 @@ exports = module.exports = app; 						   // expose app
 
 process.on('SIGINT', function() {
 
+  statsd.kill();
   pmmgr.kill();
   pmwebd.kill();
   cube_collector.kill();

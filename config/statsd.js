@@ -101,8 +101,22 @@ Optional Variables:
 
   graphitePort: 2003
 , graphiteHost: "graphite.example.com"
+* 
+* 
+* 
+* "./backends/console", 
 ,*/
 {
- port: 8125
-, backends: [ "./backends/console" ]
+deleteIdleStats: true,
+deleteTimers: true,
+deleteGauges: true,
+deleteSets: true,
+deleteCounters:true,
+ cube : {
+  dsn:"ws://localhost:1080",
+  typePrefix: "statsd"
+}, 
+port: 8125
+, backends: [ "./node_modules/cube-statsd-backend/lib/index.js" ]
+, flushInterval: 30000
 }
