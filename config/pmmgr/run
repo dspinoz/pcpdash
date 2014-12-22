@@ -1,6 +1,6 @@
 #!/bin/sh -x 
 PMMGR_HOME=`pwd`
-PCP_RUN_DIR=${PMMGR_HOME}/../../logs/pmmgr
+PCP_RUN_DIR=${PMMGR_HOME}/../../logs
 PCP_USER=$USER
 PCP_GROUP=`groups | awk '{print $1}'`
 PMLOGGER_PORT=9999
