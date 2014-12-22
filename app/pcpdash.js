@@ -21,6 +21,10 @@ module.exports = function(app) {
   // jade-templated pages ==============================================
   // for client-side rendering
 
+  app.get('/', function(req,res) {
+    res.render('index', {title: config.title, current: req.path, pages: config.pages});
+  });
+  
   app.get('/index', function(req,res) {
     res.render('index', {title: config.title, current: req.path, pages: config.pages});
   });
