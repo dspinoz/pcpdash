@@ -96,23 +96,18 @@ Optional Variables:
                       equal class interval and catchall for outliers:
                      [ { metric: 'foo', bins: [] },
                        { metric: '', bins: [ 50, 100, 150, 200, 'inf'] } ]
-
-
-
-  graphitePort: 2003
-, graphiteHost: "graphite.example.com"
 */
 {
-deleteIdleStats: true,
-deleteTimers: true,
-deleteGauges: true,
-deleteSets: true,
-deleteCounters:true,
- cube : {
-  dsn:"ws://localhost:1080",
-  typePrefix: "statsd"
-}, 
-port: 8125
-, backends: [ "../cube-statsd-backend/lib/index.js" ]
-, flushInterval: 30000
+  deleteIdleStats: true,
+  deleteTimers: true,
+  deleteGauges: true,
+  deleteSets: true,
+  deleteCounters:true,
+  port: 8125, 
+  flushInterval: 30000,
+  cube : {
+    dsn:"ws://localhost:1080",
+    typePrefix: "statsd"
+  },
+  backends: [ "../cube-statsd-backend/lib/index.js" ]
 }
