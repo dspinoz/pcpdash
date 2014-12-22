@@ -80,7 +80,7 @@ baseurl=file://`pwd`/RPMS
 enabled=1
 gpgcheck=0
 EOF
-yum --config local.repo install nodejs-cube nodejs-queue-async mongodb-org nodejs-express nodejs-request nodejs-jade nodejs-statsd
+yum --config local.repo install nodejs-cube nodejs-queue-async mongodb-org nodejs-express nodejs-request nodejs-jade nodejs-statsd nodejs-statsd-cube-backend
 ```
 
 When using yum to manage node packages, ensure the following
