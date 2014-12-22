@@ -1,6 +1,7 @@
 
 log mandatory on every 10 seconds { 
     kernel.all.load
+    hinv.map.cpu_num
 }
 
 [access]
