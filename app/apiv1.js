@@ -1,6 +1,8 @@
 var spawn = require('child_process').spawn;
+var dgram = require('dgram');
 
 var utils = require('../utils/pcpdash');
+var statsd = require('../config/statsd');
 
 var root = '/api/v1';
 
@@ -19,6 +21,29 @@ module.exports = function(app) {
   
   app.delete(root+'/hello/:id', function(req,res) {
     res.send('GOODBYE ' + req.params.id);
+  });
+
+
+  // send events to statsd listener
+  // TODO consistent interface for submitting events via various schemes, ie statsd, cube, database
+  // TODO interface for database
+  
+  // TODO support range of metric types as defined by statsd
+  //   https://github.com/etsy/statsd/
+  app.post(root+'/add/statsd/:name/:type/:val', function(req,res){
+    //TODO support statsd host ip
+    var statsdHOST = '127.0.0.1';
+
+    var message = new Buffer(req.params.name+':'+req.params.val+'|'+req.params.type);
+
+    var client = dgram.createSocket('udp4');
+    client.send(message, 0, message.length, statsd.port, statsdHOST, function(err, bytes) {
+        if (err) throw err;
+        console.log('UDP message sent to ' + statsdHOST +':'+ statsd.port);
+        client.close();
+    });
+
+    res.send('ok');
   });
   
   

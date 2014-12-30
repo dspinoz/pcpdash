@@ -1,13 +1,71 @@
 extends container
 block container
 
-  #metric
+  script(type='text/javascript').
+    $(document).ready(function(){
+    
+      $('#foo').on('click',function(ev){
+        ev.preventDefault();
+        //alert(ev);
+        $.ajax({
+          url: '/api/v1/add/statsd/foo/c/1',
+          type: 'post'
+        });
+      });
+      
+      $('#bar').on('click',function(ev){
+        ev.preventDefault();
+        //alert(ev);
+        $.ajax({
+          url: '/api/v1/add/statsd/bar/g/+1',
+          type: 'post'
+        });
+      });
+      
+      $('#baz').on('click',function(ev){
+        ev.preventDefault();
+        //alert(ev);
+        $.ajax({
+          url: '/api/v1/add/statsd/bar/s/1',
+          type: 'post'
+        });
+      });
+    });
+
+  .panel.panel-default
+    .panel-heading
+      h3.panel-title Counters
+    .panel-body
+      .btn-group
+          button#foo.btn.btn-success foo
+          
+  .panel.panel-default
+    .panel-heading
+      h3.panel-title Gauges
+    .panel-body
+      .btn-group
+          button#bar.btn.btn-success bar
+          
+  .panel.panel-default
+    .panel-heading
+      h3.panel-title Sets
+    .panel-body
+      .btn-group
+          button#bar.btn.btn-success baz
+
+  .panel.panel-default
+    #metric
   
   script(type='text/javascript').
 
     function updateData() {
-      d3.csv("/api/v1/values/localhost.localdomain/kernel.all", function(err,json) {
-        console.log('metrics', json);
+      d3.json("/event?expression=statsd(*)&limit=10", function(err,json) {
+        if (err)
+        {
+          d3.select('#metric').html('<pre>ERROR: '+JSON.stringify(err, false, ' ')+'</pre>');
+          return;
+        }
+        
         d3.select('#metric').html('<pre>GOT METRIC: '+JSON.stringify(json, false, ' ')+'</pre>');
       });
     }
