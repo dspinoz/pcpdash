@@ -97,17 +97,17 @@ Optional Variables:
                      [ { metric: 'foo', bins: [] },
                        { metric: '', bins: [ 50, 100, 150, 200, 'inf'] } ]
 */
-{
+module.exports = {
   deleteIdleStats: true,
   deleteTimers: true,
   deleteGauges: true,
   deleteSets: true,
   deleteCounters:true,
   port: 8125, 
-  flushInterval: 30000,
+  flushInterval: 5000,
   cube : {
     dsn:"ws://localhost:1080",
     typePrefix: "statsd"
   },
   backends: [ "../cube-statsd-backend/lib/index.js" ]
-}
+};
