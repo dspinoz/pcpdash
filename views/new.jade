@@ -15,7 +15,6 @@ block container
       
       $('#bar').on('click',function(ev){
         ev.preventDefault();
-        //alert(ev);
         $.ajax({
           url: '/api/v1/add/statsd/bar/g/+1',
           type: 'post'
@@ -24,9 +23,8 @@ block container
       
       $('#baz').on('click',function(ev){
         ev.preventDefault();
-        //alert(ev);
         $.ajax({
-          url: '/api/v1/add/statsd/bar/s/1',
+          url: '/api/v1/add/statsd/baz/s/1',
           type: 'post'
         });
       });
@@ -51,7 +49,7 @@ block container
       h3.panel-title Sets
     .panel-body
       .btn-group
-          button#bar.btn.btn-success baz
+          button#baz.btn.btn-success baz
 
   .panel.panel-default
     #metric
