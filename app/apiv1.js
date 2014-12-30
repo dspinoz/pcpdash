@@ -30,8 +30,10 @@ module.exports = function(app) {
   
   // TODO support range of metric types as defined by statsd
   //   https://github.com/etsy/statsd/
+  // TODO sanitize inputs for statsd format
+  // TODO sets object is too complicated when imported to cube, eg. data.sets.baz.set.store.1 = 1
   app.post(root+'/add/statsd/:name/:type/:val', function(req,res){
-    //TODO support statsd host ip
+    //TODO support statsd host ip in config
     var statsdHOST = '127.0.0.1';
 
     var message = new Buffer(req.params.name+':'+req.params.val+'|'+req.params.type);
@@ -39,7 +41,7 @@ module.exports = function(app) {
     var client = dgram.createSocket('udp4');
     client.send(message, 0, message.length, statsd.port, statsdHOST, function(err, bytes) {
         if (err) throw err;
-        console.log('UDP message sent to ' + statsdHOST +':'+ statsd.port);
+        console.log('UDP message sent to ' + statsdHOST +':'+ statsd.port, message.toString());
         client.close();
     });
 
