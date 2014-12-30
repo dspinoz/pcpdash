@@ -64,8 +64,29 @@ block container
           return;
         }
         
-        d3.select('#metric').html('<pre>GOT METRIC: '+JSON.stringify(json, false, ' ')+'</pre>');
+        json.reverse();
+        
+        var m = d3.select('#metric');
+        
+        var p = m.selectAll('p')
+                  .data(json);
+                    
+        p.enter()
+          .append('p')
+          .text(function(d) {
+            return 'E ' + JSON.stringify(d,false,' ');
+          });
+          
+        p.exit()
+          .remove();
+          
+        p.text(function(d) {
+          return 'U ' + JSON.stringify(d,false,' ');
+        });
+        
+        
       });
     }
 
+    setInterval(updateData, 5000);
     updateData();
