@@ -30,7 +30,16 @@ module.exports = function(app) {
   });
   
   app.get('/new', function(req,res) {
-    res.render('new', {title: config.title, current: req.path, pages: config.pages});
+    console.log('zzz');
+    res.render('new', {title: config.title, current: req.path, pages: config.pages}); 
+
+/*
+,function(er,ht){
+if (er) {console.log('err jjj',er); return er;}
+console.log('jjj',ht);
+return ht;
+});
+*/
   });
 
   app.get('/test', function(req,res) {
@@ -59,6 +68,10 @@ module.exports = function(app) {
 
   app.get('/filesys', function(req,res) {
     res.render('filesys', {title: config.title, current: req.path, pages: config.pages});
+  });
+
+  app.get('/statsd', function(req,res) {
+    res.render('statsd', {title: config.title, current: req.path, pages: config.pages});
   });
   
   // pcpdash =============================================================

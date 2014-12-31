@@ -13,6 +13,7 @@ module.exports = {
     {title: 'Bar Chart', href:'/bar'},
     {title: 'Rainbow', href:'/arcs'},
     {title: 'File Systems', href:'/filesys'},
+    {title: 'StatsD', href:'/statsd'},
     {title: 'New', href:'/new'} 
   ]
 }
