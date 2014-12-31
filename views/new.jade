@@ -30,32 +30,39 @@ block container
       });
     });
 
+  p Submit events via statsd and retrieve them via cube
+
   .panel.panel-default
     .panel-heading
       h3.panel-title Counters
     .panel-body
       .btn-group
-          button#foo.btn.btn-success foo
+          button#foo.btn.btn-default foo
           
   .panel.panel-default
     .panel-heading
       h3.panel-title Gauges
     .panel-body
       .btn-group
-          button#bar.btn.btn-success bar
+          button#bar.btn.btn-default bar
           
   .panel.panel-default
     .panel-heading
       h3.panel-title Sets
     .panel-body
       .btn-group
-          button#baz.btn.btn-success baz
+          button#baz.btn.btn-default baz
 
   .panel.panel-default
-    #metric
+    .panel-heading Cube Events
+    .panel-body
+      #metric
   
   script(type='text/javascript').
 
+    var dateFormat = d3.time.format("%c");
+
+    // TODO update using web sockets
     function updateData() {
       d3.json("/event?expression=statsd(*)&limit=10", function(err,json) {
         if (err)
@@ -68,23 +75,44 @@ block container
         
         var m = d3.select('#metric');
         
-        var p = m.selectAll('p')
+        var d = m.selectAll('div.input-group')
                   .data(json);
-                    
-        p.enter()
-          .append('p')
-          .text(function(d) {
-            return 'E ' + JSON.stringify(d,false,' ');
-          });
-          
-        p.exit()
+        
+        d.exit()
           .remove();
+
+        d.enter()
+          .append('div')
+          .attr('class', 'input-group');
+
+        d.html(function(d){
+        
+          var str = dateFormat(new Date(d.time)) + ' d';
           
-        p.text(function(d) {
-          return 'U ' + JSON.stringify(d,false,' ');
+          var o = d.data;
+          while (o)
+          {
+            
+            if (typeof o !== 'object')
+            {
+              // last property
+              str += ' = ' + o;
+              break;
+            }
+          
+            var keys = Object.keys(o);
+            
+            if (!keys)
+              break;
+              
+            str += '.' + keys[0];
+            o = o[keys[0]];
+          }
+        
+        
+          return '<span class="input-group-addon">' + str + '</span>';
         });
-        
-        
+
       });
     }
 
