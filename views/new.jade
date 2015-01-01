@@ -2,14 +2,35 @@ extends container
 block container
 
   .panel.panel-default
-    .panel-heading Cube Events
+    .panel-heading PCP Metrics
     .panel-body
       #metric
   
   script(type='text/javascript').
     function updateData() {
-      d3.select('#metric')
-        .text('ok');
+      d3.json('/api/v1/hosts', function(json) {
+        var h = d3.select('#metric')
+                  .selectAll('p')
+                  .data(json.hosts);
+
+        h.enter()
+          .append('p');
+
+        h.exit().remove();
+
+        h.text(function(d){
+          d3.json('/api/v1/metrics/'+d,function(d) {
+            
+          });
+
+          return JSON.stringify(d);
+        });
+
+
+        
+
+
+      });
     }
 
     setInterval(updateData, 5000);
