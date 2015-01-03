@@ -260,7 +260,27 @@ function priv_get_summary(host,archive,metric,callback) {
       var reg = new RegExp(path+'/',"g");
       out = out.replace(reg,''); 
       
-      callback(null,out);
+      // perform some cleanup of outputs
+      var lines = out.split('\n');
+      
+      //update the instance fields, remove hideous brackets and quotes
+      //TODO careful with removing characters
+      for(var i = 0; i < lines.length; i++)
+      {
+        var fields = lines[i].split(',');
+        
+        if (fields[1])
+        {
+          fields[1] = fields[1].replace('["', '').replace('"]', '');
+          lines[i] = fields.join(',');
+        }
+      }
+      
+      //fix the first line of output - header is wrong
+      lines.shift();
+      lines.unshift('metric,instance,time_average,units');
+      
+      callback(null,lines.join('\n'));
     });
     
   } catch (Error) {
