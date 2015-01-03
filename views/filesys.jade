@@ -1,158 +1,127 @@
 extends container
 block container
 
-  #hosts.panel.panel-default
-    .panel-heading Filesystems
+  .panel.panel-default
+    .panel-heading PCP Metrics
+    .panel-body
+      #metric
   
-  //- TODO support more than filesys.free
-  pre#list
-    
   script(type='text/javascript').
+  
+    function redraw(hosts) {
+    
+      var panels = d3.select('#metric')
+        .selectAll('div.panel')
+        .data(hosts);
+    
+      var host_panel = panels.enter()
+        .append('div')
+        .attr('class', 'panel panel-default');
         
-    function updateData() {
-      
-      //TODO arbitrary number of events in order to ensure that all filesys events are retrieved
-      d3.json("/event?expression=filesys(*)&limit=50", function(json) {
-      
-        var data = []; 
-        
-        //convert to be easily manageable and identifiable metric names/values
-        json.forEach(function(d) {
-          Object.keys(d.data).forEach(function(k) {
-          
-            // map values to instances
-            var vals = {};
-            
-            d.data[k].instances.forEach(function(i) {
-              vals[i.instance] = {name: i.name};
-            });
-            
-            d.data[k].values.forEach(function(v) {
-              vals[v.instance]['value'] = v.value;
-            });
-            
-            Object.keys(vals).forEach(function(i) {
-              
-              data.push({ time: d.time, 
-                          metric: 'filesys.' + k,
-                          host: d.data[k].host,
-                          filesys: vals[i].name,
-                          value: vals[i].value });
-            });
-          });
+      host_panel
+        .append('div')
+        .attr('class', 'panel-heading')
+        .append('h3')
+        .attr('class', 'panel-title')
+        .text(function(d) {
+          console.log(d);
+          return d.host;
         });
         
-        var hosts =  d3.nest()
-                      .key(function(d) {
-                        return d.host;
-                      })
-                      .key(function(d) {
-                        return d.filesys;
-                      })
-                      .key(function(d) {
-                        // time sorted oldest to newest
-                        return d.time;
-                      })
-                      .key(function(d) {
-                        return d.metric;
-                      })
-                      .entries(data);
-                      
-        //cleanup - get only latest set of values
-        hosts.forEach(function(h) {
-          h.values.forEach(function(fs) {
-            fs.values.sort(function(a,b) {
-              return d3.descending(new Date(a.key).getTime(), new Date(b.key).getTime());
-            });
-            
-            var latest = [];
-            
-            for(var i = 0; i < fs.values.length; i++) {
-              if (fs.values[i].values.length == 4) { //TODO remove magic number for number of unique events
-                latest.push(fs.values[i]);
-                break;
-              }
-            }
-            
-            fs.values = latest;
-          });
+      var body = host_panel
+        .append('div')
+        .attr('class', 'panel-body');
+        
+      var dev_panels = body.selectAll('div.panel')
+        .data(function(d) {
+          return d.dev;
         });
         
-        
-        d3.select('#list').text(JSON.stringify(hosts,false,' '));
-        
-        var div = d3.select('#hosts');
-        
-        var table = div.selectAll('table')
-          .data(hosts);
-          
-        var table_enter = table.enter()
-          .append('table')
-          .attr('class','table table-hover')
-          .attr('id', function(d) {
-            return d.key;
-          });
-          
-        table.exit().remove();
-          
-        var thead = table_enter
-          .append('thead');
-        
-        thead.append('tr').append('td').text(function(d) {
+      var dev_panel = dev_panels.enter()
+        .append('div')
+        .attr('class', 'panel panel-default');
+      
+      dev_panel.append('div')
+        .attr('class', 'panel-heading')
+        .append('h3')
+        .attr('class', 'panel-title')
+        .text(function(d) {
           return d.key;
         });
-          
-        thead = thead.select('tr')
-            .selectAll('th')
-            .data(function(d) {
-              //TODO sort array based on keys (columns)
-              return d.values[0].values[0].values;
-            });
-            
-        thead
-          .enter()
-            .append('th')
-            .text(function(d) {
-              return d.key;
-            });
         
-        thead.exit().remove();
-            
-        table_enter
-          .append('tbody');
-          
+      var info_lists = dev_panel.selectAll('ul.list-group')
+        .data(function(d) {
+          return d.value.entries();
+        });
+      
+      var info_list = info_lists.enter()
+        .append('ul')
+        .attr('class', 'list-group');
         
-        var tr = table.select('tbody').selectAll('tr')
-          .data(function(d) {
-            return d.values;
-          });
-          
-        tr.enter()
-          .append('tr')
-          .append('th')
-            .text(function(d) {
-              return d.key;
-            });
-          
-        tr.exit().remove();
+      info_list.append('li')
+        .attr('class', 'list-group-item')
+        .text(function(d) {
+        console.log(d);
         
-        var td = tr.selectAll('td')
-          .data(function(d) {
-            //TODO sort array based on keys (columns)
-            return d.values[0].values;
-          });
-          
-        td.enter()
-          .append('td')
-          .text(function(d) {
-            return d.values[0].value;
-          });
-          
-        td.exit().remove();
-          
+          var str = " " + d.value[0].time_average + " (" + d.value[0].units + ")";
+        
+          return d.key + str;
+        });
+        
+    
+    }
+  
+    function getFilesys(info, callback) {
+    
+      d3.csv('/api/v1/summary/'+info.host+'/filesys', function(json) {
+      
+        var devices = d3.nest()
+                        .key(function(d) {
+                          return d.instance;
+                        })
+                        .key(function(d) {
+                          return d.metric;
+                        })
+                        .map(json, d3.map);
+    
+        var d = {};
+        d.host = info.host;
+        d.dev = devices.entries();
+        callback(null,d);
       });
     }
+  
+    function updateData() {
     
+      var q = queue();
+      
+      d3.json('/api/v1/archives', function(json) {
+        
+        var hosts = d3.nest()
+          .key(function (d) {
+            return d.host;
+          })
+          .key(function(d) {
+            return d.end;
+          })
+          .sortKeys(d3.descending)
+          .entries(json.archives);
+          
+        hosts.forEach(function(h) {
+          // the first archive for the host, sorted by end time
+          var archive = h.values[0].values[0];
+          
+          q.defer(getFilesys, archive);
+        });
+          
+        q.awaitAll(function(err,res) {
+          console.log("DONE " + res.length, res);
+          redraw(res);
+        });
+      });
+    
+    
+    }
+
+    setInterval(updateData, 10000);
     updateData();
-    
-    setInterval(updateData, 1000);
