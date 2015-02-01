@@ -46,6 +46,15 @@ return ht;
     res.render('test', {title: config.title, current: req.path, pages: config.pages});
   });
 
+/*
+  app.get('/baby', function(req,res) {
+    res.render('baby', {title: config.title, current: req.path, pages: config.pages});
+  });
+*/
+  app.get('/baby', function(req,res) {
+    res.sendfile('views/baby.html');
+  });
+  
   app.get('/fetch', function(req,res) {
     res.render('fetch', {title: config.title, current: req.path, pages: config.pages});
   });
