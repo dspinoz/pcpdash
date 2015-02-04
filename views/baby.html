@@ -30,7 +30,7 @@
   </h3>
 
 <div class="form-group">
-<h1 class=""><span id="timer">00:00</span> <small id="timer_history">10:45 L 4:38 R</small></h1>
+<h1 class=""><span id="timer">00:00</span> <small id="timer_history"></small></h1>
 <div class="btn-group btn-group-justified" role="group" aria-label="...">
   <div class="btn-group" role="group">
     <button type="button" class="btn btn-success" id="timer_startstop">Start</button>
@@ -62,25 +62,25 @@
 <label class="h6">Top-up</label>
 <div class="btn-group btn-group-justified" role="group" aria-label="...">
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">0</button>
+    <button type="button" class="btn btn-default topup-type">0</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">5</button>
+    <button type="button" class="btn btn-default topup-type">5</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">10</button>
+    <button type="button" class="btn btn-default topup-type">10</button>
   </div>
 <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">15</button>
+    <button type="button" class="btn btn-default topup-type">15</button>
   </div>
 <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">20</button>
+    <button type="button" class="btn btn-default topup-type">20</button>
   </div>
 <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">25</button>
+    <button type="button" class="btn btn-default topup-type">25</button>
   </div>
 <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">60</button>
+    <button type="button" class="btn btn-default topup-type">60</button>
   </div>
 </div>
 </div>
@@ -341,9 +341,8 @@ function sendEvent(selection,data,cb,id) {
       dataType: "json",
       success: function(data) {
         //TODO notify successful event
-        if (cb) { 
+        if (cb) 
           cb();
-        }
       },
       error: function(xhr,txt,err) {
         d3.select(selection).text(xhr.responseJSON.error);
@@ -379,6 +378,19 @@ function updateTimer() {
   //TODO format time
   d3.select('#timer').text(new Date().getTime()  - timer.start.getTime());
 }
+
+d3.selectAll('.topup-type').on('click', function(d) {
+  
+  d3.selectAll('.topup-type').attr('class', 'btn btn-default topup-type');
+  d3.select(this).attr('class', 'btn btn-primary topup-type');
+  
+  if (!evdata['topup'])
+    evdata['topup'] = {};
+    
+  evdata.topup['amout'] = d3.select(this).text();
+  
+  sendEvent(this, evdata, null, evid);
+});
 
 d3.select('#timer_startstop').on('click', function(d) {
   
