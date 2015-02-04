@@ -30,7 +30,7 @@
   </h3>
 
 <div class="form-group">
-<h1 class=""><span id="timer">15:23</span> <small>10:45 L 4:38 R</small></h1>
+<h1 class=""><span id="timer">00:00</span> <small id="timer_history">10:45 L 4:38 R</small></h1>
 <div class="btn-group btn-group-justified" role="group" aria-label="...">
   <div class="btn-group" role="group">
     <button type="button" class="btn btn-success" id="timer_startstop">Start</button>
@@ -47,13 +47,13 @@
 <div class="form-group">
 <div class="btn-group btn-group-justified" role="group" aria-label="...">
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">Bottle</button>
+    <button type="button" class="btn btn-default timer_type">Bottle</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">Left</button>
+    <button type="button" class="btn btn-default timer_type">Left</button>
   </div>
   <div class="btn-group" role="group">
-    <button type="button" class="btn btn-default">Right</button>
+    <button type="button" class="btn btn-default timer_type">Right</button>
   </div>
 </div>
 </div>
@@ -297,45 +297,63 @@
 
 <script type="text/javascript">
 
+var baby = 'baby_test';
+var evid = new Date().getTime(); //TODO identify unique clients, not just page loads
+var evdata = {};
+
+console.log("Event ID: ", evid);
+
 //cancel form submit on button press
 $('button').click(function(ev) {
   ev.preventDefault();
   console.log('prevent default');
 });
 
-d3.selectAll('button.btn.btn-default')
-  .on('click', function(d) {
+function btnSuccess(selection) {
 
-    var txt = d3.select(this).text();
+  var txt = d3.select(selection).text();
 
-    d3.select(this)
-      .attr('class', 'btn btn-primary')
-      .text('')
-      .append('span')
-      .attr('class', 'glyphicon glyphicon-ok');
+  d3.select(selection)
+    .attr('class', 'btn btn-primary')
+    .text('')
+    .append('span')
+    .attr('class', 'glyphicon glyphicon-ok');
 
-    d3.select(this)
-      .transition()
-      .delay(1000)
-      .text(txt)
-      .attr('class', 'btn btn-default')
-      .select('span')
-      .remove();
-  });
+  d3.select(selection)
+    .transition()
+    .delay(1000)
+    .text(txt)
+    .attr('class', 'btn btn-default')
+    .select('span')
+    .remove();
+}
   
-d3.select('#test').on('click', function(d) {
+function sendEvent(selection,data,cb,id) {
+  var ev = {type: baby, data: data};
   
-  var successcb = function(data) {
-        alert("posted: " + JSON.stringify(data));
-      };
+  if (id)
+    ev['id'] = id;
   
   $.ajax({
       type: "POST",
       url: "http://10.1.1.16:1080/1.0/event/put", 
-      data: JSON.stringify([{type: "baby"}]),
-      dataType: "application/json",
-      success: successcb
+      data: JSON.stringify([ev]),
+      dataType: "json",
+      success: function(data) {
+        //TODO notify successful event
+        if (cb) { 
+          cb();
+        }
+      },
+      error: function(xhr,txt,err) {
+        d3.select(selection).text(xhr.responseJSON.error);
+      }
     });
+}
+  
+  
+d3.select('#test').on('click', function(d) {
+  sendEvent(this, null);
 });
 
 d3.select('#timer_reset').on('click', function(d) {
@@ -343,7 +361,19 @@ d3.select('#timer_reset').on('click', function(d) {
   d3.select('#timer_startstop').text('Start');
 });
 
+// initialisation
 var timer = {};
+
+$('#timer_startstop').prop('disabled', true);
+updateTimerHistory();
+
+d3.selectAll('.timer_type').on('click', function(d) {
+  timer.type = d3.select(this).text();
+  $('#timer_startstop').prop('disabled', false);
+  d3.selectAll('.timer_type').attr('class', 'btn btn-default timer_type');
+  d3.select(this).attr('class', 'btn btn-primary timer_type');
+});
+
 
 function updateTimer() {
   //TODO format time
@@ -358,15 +388,84 @@ d3.select('#timer_startstop').on('click', function(d) {
     timer.start = new Date();
     timer.interval = setInterval(updateTimer,10);
     d3.select(this).text('Stop');
+    sendEvent(this,{timer: {start: timer.start, type: timer.type}});
   }
   else if (label = 'Stop') {
     clearInterval(timer.interval);
     d3.select(this).text('Start');
+    
+    evdata['timer'] = {};
+    evdata.timer['duration'] = new Date().getTime() - timer.start.getTime();
+    evdata.timer['type'] = timer.type;
+    
+    sendEvent(this, evdata, function() {
+      updateTimerHistory();
+    }, evid);
   }
   else {
     console.log('Invalid start/stop state');
   }
 });
+
+
+//http://stackoverflow.com/questions/8211744/convert-time-interval-given-in-seconds-into-more-human-readable-form
+function millisecondsToStr (milliseconds) {
+    // TIP: to find current time in milliseconds, use:
+    // var  current_time_milliseconds = new Date().getTime();
+
+    function numberEnding (number) {
+        return (number > 1) ? 's' : '';
+    }
+
+    var temp = Math.floor(milliseconds / 1000);
+    var years = Math.floor(temp / 31536000);
+    if (years) {
+        return years + ' year' + numberEnding(years);
+    }
+    //TODO: Months! Maybe weeks? 
+    var days = Math.floor((temp %= 31536000) / 86400);
+    if (days) {
+        return days + ' day' + numberEnding(days);
+    }
+    var hours = Math.floor((temp %= 86400) / 3600);
+    if (hours) {
+        return hours + ' hr' + numberEnding(hours);
+    }
+    var minutes = Math.floor((temp %= 3600) / 60);
+    if (minutes) {
+        return minutes + ' min' + numberEnding(minutes);
+    }
+    var seconds = temp % 60;
+    if (seconds) {
+        return seconds + ' sec' + numberEnding(seconds);
+    }
+    return 'just now'; //'less than a second' //or other string you like;
+}
+
+function millisecondsToTime(ms) {
+  return "" + ms/1000 + "s";
+}
+
+function updateTimerHistory() {
+  d3.json("http://10.1.1.16:1081/1.0/event/get?expression="+baby+"(timer.duration,timer.type)&limit=2", function(json) {
+    
+    var str = "";
+    for(var i = 0; i < json.length; i++) {
+      var d = json[i];
+      
+      var a = millisecondsToStr(Math.abs(new Date() - new Date(d.time)));
+      str +=  a + (a === "just now" ? " " : " ago ");
+      
+      str += d.data.timer.type + " " + millisecondsToTime(d.data.timer.duration);
+      if (i+1 < json.length) {
+        str += ", ";
+      }
+    };
+    
+    d3.select('#timer_history').text(str);
+  });
+  
+}
 
 </script>
 
